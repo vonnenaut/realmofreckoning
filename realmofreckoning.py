@@ -20,43 +20,38 @@
 #====================================================================
 # To-Do:
 #-------------------------------------------------------------------
-# --Implement health, stamina, usage of items, battle system
-# --Consider whether to modify this with Python libraries.
+# --Make code more consistent (commenting, etc.) 
+# --Get rid of 'newplayer' and just implement the starting narrative when calling narrative() for the first time because
+#	it's silly to have to keep track of whether the user is a newplayer or not for such a small reason
+# --Consider ways to reduce or eliminate all global variables (encapsulate into classes?)
+# --Add more text narrative of areas to explore
+# --add item persistence on the ground when items are dropped
+# --Implement item usage (health potion, equipping weapons)
+# --Implement health, stamina. magic meters
+# --Implement battle system
+# --Consider whether to modify this with Python libraries, for fun.
 # Something like RenPy could introduce visuals, but might require a lot of 
 # studying to use and would require hand-made graphics.
-#
 #
 #====================================================================
 # Notes:
 #--------------------------------------------------------------------
-# The location of the player is tracked on a grid created by a numbering system which originates at the starting point (1000), 
-# where numbers increase by one going north, assuming a max north number of 1099 and are prepended by a two-digit number 
-# for each column to the left of the 1000 point and the same for East but negative numbers, all relative to the starting 
-# point.  Heading due west would produce location numbers starting from 10000 to , 2000, 3000, 4000, etc.  Heading East from 
-# 1000 to -1000, -200, -3000, etc.
-#
 #Update 11/21/16:  I realized when I tried to keep track of availability of items on each map location that this grid system is 
 # not going to work very conveniently for passing the grid location as a name for a dictionary name/value pair serving this purpose.
 # Now I realize I should have just used a traditional x,y grid to specify location from the start and I should define 0,0 as the 
-# furthest reaches of the map in the SW corner and begin somewhere NE of there (250,250?  It's really arbitrary unless I want to build
+# furthest reaches of the map in the SW corner and begin somewhere NE of there (250,250)?  It's really arbitrary unless I want to build
 #impassable mountains or some other insurmountable obstacle into the map to the W and S of the starting location.
 #
-# these variables are initialized as follows:
-#
-#sets the starting location on the map grid, but this is too simplistic and causes problems and so must be converted to 
-#an x,y dictionary set with non-negative coordinates...  or should it implement a point?
-#With a dictionary, we could possibly store x, y, and also whether items have been collected.  However,
-# my concern is whether it will require too much manual programming to create this potentially massive
-# dictionary set for the game and wonder if there is a way to create a function which will populate these 
-# values on the fly, as the player enters each new square of the map.
-#
-#
-#
-#Update 12/13/16:  I was able to implement a new Locale class and an expanded Ppoint class
+#Update 12/13/16:  I was able to implement a new Locale class and an expanded Point class
 # which have both been tested successfully as designed.  Now I need to reintegrate them back
 # into this, the main program.  I'm going to have to modify narrative to handle to Point object
 # and should consider later creating a separate text file to hold narratives.
 #
+# Update 12/23/16:  I was able to reintegrate the new Locale and modified Point classes back into 
+# the main program without much difficulty.  There are no known bugs but the game is very simple.
+# I am beginning to understand the suggestions to use Python as a prototyping language.  
+# It's so smooth and relatively easy to write with compared to Java.  I've cleaned up/standardized the comments
+# mostly, though I still need to define each argument and variable in my comments.  I've updated the To-Do list.
 #
 #  ==========  End documentation  ==========
 
@@ -64,8 +59,11 @@
 # sys is for exiting the program
 import sys
 
-# formatting for adding color to text for more visual variety and ease of reading
-# (may consider looking into Python Curses for similar functionality)
+
+# The following is formatting for adding color to text for more visual variety and ease of reading
+# (may consider looking into Python Curses for similar functionality) If I create an Intro or 
+# Initialization function to eliminate newplayer, this is a good candidate for other code to move 
+# into the initialization function.
 #
 def prRed(prt): print("\033[91m {}\033[00m" .format(prt))
 def prGreen(prt): print("\033[92m {}\033[00m" .format(prt))
@@ -84,80 +82,99 @@ x = 0
 y = 0
 
 #sets the initial input value to 'nowhere' (should be n, s, e, w, h, t, i, q, or h, as currently implemented in the move() function)
+# Seems like there should be a purpose for calling it nowhere...  should I try to test and catch this somehow?  Haven't seen it cause any problems... yet.
 go = 'nowhere'
 
 #tells the program whether to display the new player narrative introducing the game and the start scene
+# TO-DO:  Get rid of this.  Create an Intro class to print the opening narrative text once and call it at the beginning before the first call to narrative()
 newplayer = True
 
 # a list to keep track of items in player's inventory
 inventory = []
 
-# keep track of whether a player has searched the area yet using a dictionary whose 
-# key is the current player location and whose value is # a boolean representing 
-# whether or not there is anything in the area to pick up
-#cur_collected = {}
-# replaced by class Locale and its loot_present attribute
-
 # a list to hold all Locale objects
-# TO-DO:  figure out how to make the key or index be represented by a pair of numbers (point, i.e., x,y)
-# A tuple might work for this purpose
 locations = {}
 
-# a simple class which defines x and y values for each location on the map
-# and provides a method for printing the coordinates (for testing)
-# and returning a name based on converting and concatenating the x-y coordinates
-# of the current object.  This will be used to name each object uniquely as it
-# is created during the game.
-#
-class Point(object):
 
-	# initialize a point object with passed x and y coordinates
+class Point(object):
+	"""
+	a simple class which defines x and y values for each location on the map
+and provides a method for printing the coordinates (for testing)
+and returning a name based on converting and concatenating the x-y coordinates
+of the current object.  This will be used to name each object uniquely as it
+is created during the game.
+	"""
+
+	
 	def __init__(self, x, y):
+		"""
+		initialize a point object with passed x and y coordinates
+		"""
 		self.x = x
 		self.y = y
 
-	# add one to the y value, i.e.,
-	# move north
+	
 	def move_north(self):
+		"""
+			add one to the y value, i.e., move north
+		"""
 		self.y += 1
 		check_locale_existence(self)
 
-	# add one to the x value, i.e.,
-	# move east
+	
 	def move_east(self):
+		"""
+		add one to the x value, i.e., move east
+		"""
 		self.x += 1
 		check_locale_existence(self)
 
-	# subtract one from the y value, i.e.,
-	# move south
+	
 	def move_south(self):
+		"""
+			subtract one from the y value, i.e., move south
+		"""
 		self.y -= 1
 		check_locale_existence(self)
 
-	# subtract one from the x value, i.e.,
-	# move west
+	
 	def move_west(self):
+		"""
+			subtract one from the x value, i.e., move west
+		"""
 		self.x -= 1
 		check_locale_existence(self)
 
-	# return a human-readable set of coordinates
-	# for testing purposes
+	
 	def return_coords(self):
+		"""
+			return a human-readable set of coordinates for testing purposes
+		"""
 		return "(" + str(self.x) + ", " + str(self.y) +")"
 
-	# return a unique string made up of the x and y coordinates
-	# to be used for naming each Locale object as it is created and
-	# for retrieval
+	
 	def return_object_name(self):
+		"""
+			Return a unique string made up of the x and y coordinates
+			to be used for naming each Locale object as it is created and
+			for retrieval.
+		"""
 		return str(self.x) + str(self.y)
 
+	
 	def set_location(self, x, y):
+		"""
+			Set the location.  This is only being used while the game is being built,
+			to account for stepping into a location that hasn't been written yet.
+		"""
 		self.x = x
 		self.y = y
 
-# check for the existence of a Locale object
-# and create it if it doesn't exist yet
+
 def check_locale_existence(self):
+	"""
+		Check for the existence of a Locale object and create it if it doesn't exist yet
+	"""
 	current_obj = self.return_object_name()
 	if current_obj in locations:
 		return
@@ -237,10 +254,14 @@ def narrative(current_location, newplayer):
 	go = raw_input(prompt)
 	move(go, current_location, newplayer)
 	
-# this function takes the current location and modifies it appropriately based on the user directional input (n, s, e, w)
-#
+
 def move(go, current_location, newplayer):
 	""" Handles keeping track of player location based on which direction they head and their current location
+		arguments:
+		go:  				user input ('n', 's', 'e', 'w', etc.)
+		current_location: 	an instance of the Point class which specifies the user's current location with (x, y)
+		newplayer:			a boolean which keeps track of whether the player is just starting the game.
+
 	"""
 
 	if go in {'n', 'north', 'North'}:
@@ -285,8 +306,6 @@ def move(go, current_location, newplayer):
 	narrative(current_location, newplayer)
 
 
-# print a list of all items contained in the player's inventory
-#
 def inv_list():
 	""" Lists all the items in the player's inventory
 	"""
@@ -294,8 +313,7 @@ def inv_list():
 	prGreen(inventory)
 	return
 
-# add an item to the inventory if the inventory isn't full, otherwise prompt user to drop something and if they decline, dropping the new item on the ground
-#
+
 def inv_add(item):
 	""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full.
 	"""
@@ -312,9 +330,6 @@ def inv_add(item):
 			print "Dropped %s on the ground." % (item)
 
 
-
-# prompts user to view a list of inventory items and pick one to remove
-#
 def inv_prmpt_remove():
 	""" Prompts player to pick an item to remove from the inventory
 	"""
@@ -365,9 +380,10 @@ def search_area(current_location):
 	object_name.loot_present = False
 	return
 
-# this function ends the program
-#
 def die():
+	"""
+		this function ends the program
+	"""
 	sys.exit("\nGame Over.\n")
 
 
