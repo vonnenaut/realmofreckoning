@@ -53,7 +53,7 @@
 # It's so smooth and relatively easy to write with compared to Java.  I've cleaned up/standardized the comments
 # mostly, though I still need to define each argument and variable in my comments.  I've updated the To-Do list.
 #
-# Update 1/14/17:  The approach I have to coloring text works in Linux but not Windows so I am going to try using colorama.
+# Update 1/14/17:  The approach I had to coloring text worked in Linux but not Windows so I added tests for platform type and have imported a new module called vtemu which is a VT100 emulator for Windows which allows colorized text.
 # I've replaced any instances of 'locale' with 'location' in order to avoid bizarre python-interpreter-breaking behavior
 # which I observed yesterday involving an error related to 'getdefaultlocale' which I can only assume has something to do 
 # with naming a test file 'locale.py' which then somehow overrode a standard python file of the same name.
