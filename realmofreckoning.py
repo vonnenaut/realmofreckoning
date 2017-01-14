@@ -21,6 +21,8 @@
 # To-Do:
 #-------------------------------------------------------------------
 # --Make code more consistent (commenting, etc.) 
+# --Use a text-colorization system which works in Windows, not just Linux
+# --Get rid of anything named 'locale', replacing it with 'location'
 # --Get rid of 'newplayer' and just implement the starting narrative when calling narrative() for the first time because
 #	it's silly to have to keep track of whether the user is a newplayer or not for such a small reason
 # --Consider ways to reduce or eliminate all global variables (encapsulate into classes?)
@@ -42,22 +44,27 @@
 # furthest reaches of the map in the SW corner and begin somewhere NE of there (250,250)?  It's really arbitrary unless I want to build
 #impassable mountains or some other insurmountable obstacle into the map to the W and S of the starting location.
 #
-#Update 12/13/16:  I was able to implement a new Locale class and an expanded Point class
+#Update 12/13/16:  I was able to implement a new Location class and an expanded Point class
 # which have both been tested successfully as designed.  Now I need to reintegrate them back
 # into this, the main program.  I'm going to have to modify narrative to handle to Point object
 # and should consider later creating a separate text file to hold narratives.
 #
-# Update 12/23/16:  I was able to reintegrate the new Locale and modified Point classes back into 
+# Update 12/23/16:  I was able to reintegrate the new Location and modified Point classes back into 
 # the main program without much difficulty.  There are no known bugs but the game is very simple.
 # I am beginning to understand the suggestions to use Python as a prototyping language.  
 # It's so smooth and relatively easy to write with compared to Java.  I've cleaned up/standardized the comments
 # mostly, though I still need to define each argument and variable in my comments.  I've updated the To-Do list.
 #
 #  ==========  End documentation  ==========
+###
 
-
+# imports
+##
+#
 # sys is for exiting the program
-import sys
+# vtemu is a VT100 emulator for Windows which colorizes text
+
+import sys, vtemu
 
 
 # The following is formatting for adding color to text for more visual variety and ease of reading
@@ -65,14 +72,28 @@ import sys
 # Initialization function to eliminate newplayer, this is a good candidate for other code to move 
 # into the initialization function.
 #
-def prRed(prt): print("\033[91m {}\033[00m" .format(prt))
-def prGreen(prt): print("\033[92m {}\033[00m" .format(prt))
-def prYellow(prt): print("\033[93m {}\033[00m" .format(prt))
-def prLightPurple(prt): print("\033[94m {}\033[00m" .format(prt))
-def prPurple(prt): print("\033[95m {}\033[00m" .format(prt))
-def prCyan(prt): print("\033[96m {}\033[00m" .format(prt))
-def prLightGray(prt): print("\033[97m {}\033[00m" .format(prt))
-def prBlack(prt): print("\033[98m {}\033[00m" .format(prt))
+
+# if the terminal is Linux or Cygwin, use the following codes
+if sys.platform in ['linux2', 'cygwin']:
+	def prRed(prt): print("\033[91m {}\033[00m" .format(prt))
+	def prGreen(prt): print("\033[92m {}\033[00m" .format(prt))
+	def prYellow(prt): print("\033[93m {}\033[00m" .format(prt))
+	def prLightPurple(prt): print("\033[94m {}\033[00m" .format(prt))
+	def prPurple(prt): print("\033[95m {}\033[00m" .format(prt))
+	def prCyan(prt): print("\033[96m {}\033[00m" .format(prt))
+	def prLightGray(prt): print("\033[97m {}\033[00m" .format(prt))
+	def prBlack(prt): print("\033[98m {}\033[00m" .format(prt))
+
+if sys.platform == 'win32':	
+	def prRed(prt): print("\x1b[1;31m {}\x1b[00m" .format(prt))
+	def prGreen(prt): print("\x1b[2;32m {}\x1b[00m" .format(prt))
+	def prYellow(prt): print("\033[93m {}\033[00m" .format(prt))
+	def prLightPurple(prt): print("\033[94m {}\033[00m" .format(prt))
+	def prPurple(prt): print("\033[95m {}\033[00m" .format(prt))
+	def prCyan(prt): print("\033[96m {}\033[00m" .format(prt))
+	def prLightGray(prt): print("\033[97m {}\033[00m" .format(prt))
+	def prBlack(prt): print("\033[98m {}\033[00m" .format(prt))
+
 
 #defines the input prompt
 prompt = '=---> '
@@ -92,8 +113,10 @@ newplayer = True
 # a list to keep track of items in player's inventory
 inventory = []
 
-# a list to hold all Locale objects
+# a list to hold all Location objects
 locations = {}
+
+current_location = [0, 0]
 
 
 class Point(object):
@@ -119,7 +142,7 @@ is created during the game.
 			add one to the y value, i.e., move north
 		"""
 		self.y += 1
-		check_locale_existence(self)
+		check_location_existence(self)
 
 	
 	def move_east(self):
@@ -127,7 +150,7 @@ is created during the game.
 		add one to the x value, i.e., move east
 		"""
 		self.x += 1
-		check_locale_existence(self)
+		check_location_existence(self)
 
 	
 	def move_south(self):
@@ -135,7 +158,7 @@ is created during the game.
 			subtract one from the y value, i.e., move south
 		"""
 		self.y -= 1
-		check_locale_existence(self)
+		check_location_existence(self)
 
 	
 	def move_west(self):
@@ -143,7 +166,7 @@ is created during the game.
 			subtract one from the x value, i.e., move west
 		"""
 		self.x -= 1
-		check_locale_existence(self)
+		check_location_existence(self)
 
 	
 	def return_coords(self):
@@ -156,7 +179,7 @@ is created during the game.
 	def return_object_name(self):
 		"""
 			Return a unique string made up of the x and y coordinates
-			to be used for naming each Locale object as it is created and
+			to be used for naming each Location object as it is created and
 			for retrieval.
 		"""
 		return str(self.x) + str(self.y)
@@ -171,22 +194,22 @@ is created during the game.
 		self.y = y
 
 
-def check_locale_existence(self):
+def check_location_existence(self):
 	"""
-		Check for the existence of a Locale object and create it if it doesn't exist yet
+		Check for the existence of a Location object and create it if it doesn't exist yet
 	"""
 	current_obj = self.return_object_name()
 	if current_obj in locations:
 		return
 	else:
-		current_obj = Locale(current_location, False, True)
+		current_obj = Location(current_location, False, True)
 
 
-class Locale(object):
+class Location(object):
 	""" This class defines all of the attributes to be stored for each location object
 	"""
 
-	# initializes each locale object with attributes for:
+	# initializes each location object with attributes for:
 	# location (point containing x and y coordinates)
 	# name which is used to create the key for the dictionary storing each object
 	# monsters_present which tracks whether monsters are in the present location
@@ -199,12 +222,12 @@ class Locale(object):
 		self.monsters_present = monsters_present
 		# TO-DO: add the ability to drop items and have them persist
 		# but currently loot is handled directly by search so that
-		# functionality should be moved here or shared by search and Locale
+		# functionality should be moved here or shared by search and Location
 		self.loot_present = loot_present
 		locations[self.name] = self
 
 
-def retrieve_Locale(current_location):
+def retrieve_Location(current_location):
 	""" attempts to return an object with a name based on the current location coordinates
 		if the object name doesn't exist, throws NameError exception
 	"""
@@ -217,19 +240,20 @@ def retrieve_Locale(current_location):
 		return
 
 
-def narrative(current_location, newplayer):
+def narrative(newplayer):
 	""" Handles delivery of narrative text based on location as well as any choices available in any given location
 	"""
-	curr_coord_name = current_location.return_object_name()
+	global current_location
+
 
 	if newplayer == True:
 		print "\nYou awaken to the distant sound of commotion to your west.  You\n open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  \nTo your north in the distance is a fortress.  To your \neast is a forest and to your south is a riverbank\n with a boat tied at a pier.  \nWhich direction do you go? (enter: 'n', 's', 'e' or 'w')"
 		newplayer = False
 
-	elif curr_coord_name == '00':
+	elif current_location.x == 0 and current_location.y == 0:
 		print "\nYou are standing in the same field in which you first awoke without\n any memory of how you got here.  Which way?\n"
 	
-	elif curr_coord_name == '-10':
+	elif current_location.x == -1 and current_location.y == 0:
 		print "\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\n life.  Do you approach the bodies? (y/n)"		
 		choice = raw_input(prompt)
 		if choice in {'yes', 'y', 'Y', 'Yes', 'YES', 'YEs', 'YeS', 'yeS'}:
@@ -240,16 +264,16 @@ def narrative(current_location, newplayer):
 		else:
 			print "Please type y or n."
 
-	elif curr_coord_name == '01':
+	elif current_location.x == 0 and current_location.y == 1:
 		print "\nYou walk for some time to finally arrive at an old, \napparently abandoned fortress which is crumbled with time.  \nThere is nothing here but ruins.  Which direction do you go\n from here?"	
 	
-	elif curr_coord_name == '02':
+	elif current_location.x == 0 and current_location.y == 2:
 		print "\nAs you head north around the abandoned and crumbling \nfortress you see a valley spread out before you.  In the \ndistance to the north is a village with wafts of smoke being \ncarried off by the breeze trailing over the scene \nlike the twisted tails of many kites.  To the west gently\n sloping foothills transition into distant blue\n mountains and to the east, a vast forest conspires to block out\n all surface detail."
 	
 	else:
 		prRed("Under construction.  Returning to the beginning.  Pick a different direction next time.")
 		current_location.set_location(0, 0)
-		narrative(current_location, newplayer)
+		narrative(newplayer)
 
 	go = raw_input(prompt)
 	move(go, current_location, newplayer)
@@ -283,27 +307,27 @@ def move(go, current_location, newplayer):
 			die()
 		elif choice in {'n', 'N', 'No', 'NO'}:
 			print "Let's get back to it then."
-			narrative(current_location, newplayer)
+			narrative(newplayer)
 			return
 		else:
 			print "Please type yes or no."
 
 	elif go in {'h', 'H', 'help', 'Help', 'HELP', 'HALP', 'halp'}:
 		prCyan("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check the time\ni check your inventory\nq quit\nh help\n")
-		narrative(current_location, newplayer)
+		narrative(newplayer)
 
 	elif go in {'i', 'inventory', 'I', 'Inventory', 'INVENTORY'}:
 		inv_list()
-		narrative(current_location, newplayer)
+		narrative(newplayer)
 
 	elif go in {'x', 'search'}:
 		search_area(current_location)
-		narrative(current_location, newplayer)
+		narrative(newplayer)
 
 	else:
 		print "Please type 'n', 's', 'e' or 'w'."
 	
-	narrative(current_location, newplayer)
+	narrative(newplayer)
 
 
 def inv_list():
@@ -358,10 +382,10 @@ def inv_remove(item):
 def search_area(current_location):
 	""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk.
 	"""
-	# retrieve Locale object for current location to check 
+	# retrieve Location object for current location to check 
 	# boolean variable for presence of loot at the location
 	curr_coord_name = current_location.return_object_name()
-	object_name = retrieve_Locale(current_location)
+	object_name = retrieve_Location(current_location)
 	loot_present = object_name.loot_present
 
 	if curr_coord_name == '00' and loot_present == True:
@@ -384,18 +408,26 @@ def die():
 	"""
 		this function ends the program
 	"""
+
+	# disable colorama text-colorization
+	# deinit()
+
+	# exit the program
 	sys.exit("\nGame Over.\n")
 
 
 # variables
 #
 
-# stores objects/instances of the Locale class, i.e., each actual location on the map grid
+# stores objects/instances of the Location class, i.e., each actual location on the map grid
 locations = {}
 
 # this line sets up the first location, the player's starting point
 current_location = Point(0, 0)
-location = Locale(current_location, False, True)
+location = Location(current_location, False, True)
+
+# initialize colorama text-colorization
+# init()
 
 # this line starts the loop which gets user input for interacting with the environment
-narrative(current_location, newplayer)
+narrative(newplayer)
