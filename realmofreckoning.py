@@ -82,13 +82,46 @@ if sys.platform in ['linux2', 'cygwin']:
 	def prYellow(prt): print("\033[93m {}\033[00m" .format(prt))
 	def prLightPurple(prt): print("\033[94m {}\033[00m" .format(prt))
 	def prPurple(prt): print("\033[95m {}\033[00m" .format(prt))
-	def prCyan(prt): print("\033[96m {}\033[00m" .format(prt))
+	def prBlue(prt): print("\033[96m {}\033[00m" .format(prt))
 	def prLightGray(prt): print("\033[97m {}\033[00m" .format(prt))
 	def prBlack(prt): print("\033[98m {}\033[00m" .format(prt))
+
+"""
+VT100/ANSI Escape sequence reference chart:
+0	Reset all attributes
+1	Bright
+2	Dim
+4	Underscore	
+5	Blink
+7	Reverse
+8	Hidden
+
+	Foreground Colours
+30	Black
+31	Red
+32	Green
+33	Yellow
+34	Blue
+35	Magenta
+36	Cyan
+37	White
+
+	Background Colours
+40	Black
+41	Red
+42	Green
+43	Yellow
+44	Blue
+45	Magenta
+46	Cyan
+47	White
+"""
 
 if sys.platform == 'win32':	
 	def prRed(prt): print("\x1b[1;31m {}\x1b[00m" .format(prt))
 	def prGreen(prt): print("\x1b[2;32m {}\x1b[00m" .format(prt))
+	def prYellow(prt): print("\x1b[1;33m {}\x1b[00m" .format(prt))
+	def prBlue(prt): print("\x1b[1;34m {}\x1b[00m" .format(prt))
 	
 
 #defines the input prompt
@@ -316,7 +349,7 @@ def move(go, current_location, newplayer):
 			print "Please type yes or no."
 
 	elif go in {'h', 'H', 'help', 'Help', 'HELP', 'HALP', 'halp'}:
-		prCyan("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check the time\ni check your inventory\nq quit\nh help\n")
+		prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check the time\ni check your inventory\nq quit\nh help\n")
 		narrative(newplayer)
 
 	elif go in {'i', 'inventory', 'I', 'Inventory', 'INVENTORY'}:
