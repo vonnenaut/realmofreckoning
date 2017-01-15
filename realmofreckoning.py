@@ -20,6 +20,8 @@
 #====================================================================
 # To-Do:
 #-------------------------------------------------------------------
+# --Location should call Point and Point has at least one method that logically should belong to Location --  rethink these two 
+#      classes and consider whether Point should be a superclass of Location.
 # --Make code more consistent (commenting, etc.) 
 # --Use a text-colorization system which works in Windows, not just Linux
 # --Get rid of anything named 'locale', replacing it with 'location'
@@ -87,13 +89,7 @@ if sys.platform in ['linux2', 'cygwin']:
 if sys.platform == 'win32':	
 	def prRed(prt): print("\x1b[1;31m {}\x1b[00m" .format(prt))
 	def prGreen(prt): print("\x1b[2;32m {}\x1b[00m" .format(prt))
-	def prYellow(prt): print("\033[93m {}\033[00m" .format(prt))
-	def prLightPurple(prt): print("\033[94m {}\033[00m" .format(prt))
-	def prPurple(prt): print("\033[95m {}\033[00m" .format(prt))
-	def prCyan(prt): print("\033[96m {}\033[00m" .format(prt))
-	def prLightGray(prt): print("\033[97m {}\033[00m" .format(prt))
-	def prBlack(prt): print("\033[98m {}\033[00m" .format(prt))
-
+	
 
 #defines the input prompt
 prompt = '=---> '
@@ -116,7 +112,7 @@ inventory = []
 # a list to hold all Location objects
 locations = {}
 
-current_location = [0, 0]
+
 
 
 class Point(object):
@@ -169,11 +165,14 @@ is created during the game.
 		check_location_existence(self)
 
 	
-	def return_coords(self):
-		"""
-			return a human-readable set of coordinates for testing purposes
-		"""
-		return "(" + str(self.x) + ", " + str(self.y) +")"
+	# def coords_to_string(self):
+		# """
+			# return a human-readable set of coordinates for testing purposes
+		# """
+		# return "(" + str(self.x) + ", " + str(self.y) +")"
+
+	def get_coords(self):
+		return [x, y]
 
 	
 	def return_object_name(self):
@@ -185,24 +184,13 @@ is created during the game.
 		return str(self.x) + str(self.y)
 
 	
-	def set_location(self, x, y):
+	def set_coords(self, x, y):
 		"""
 			Set the location.  This is only being used while the game is being built,
 			to account for stepping into a location that hasn't been written yet.
 		"""
 		self.x = x
 		self.y = y
-
-
-def check_location_existence(self):
-	"""
-		Check for the existence of a Location object and create it if it doesn't exist yet
-	"""
-	current_obj = self.return_object_name()
-	if current_obj in locations:
-		return
-	else:
-		current_obj = Location(current_location, False, True)
 
 
 class Location(object):
@@ -216,15 +204,30 @@ class Location(object):
 	# loot_present which keeps track of whether loot is in the present location 
 	# (either having been dropped or spawned initially)
 	
+# 	current_location = [0, 0] # starting location
+
 	def __init__(self, current_location, monsters_present, loot_present):
 		self.location = current_location
-		self.name = str(self.location.x) + str(self.location.y)
+		self.coords = current_location.get_coords()
 		self.monsters_present = monsters_present
 		# TO-DO: add the ability to drop items and have them persist
 		# but currently loot is handled directly by search so that
 		# functionality should be moved here or shared by search and Location
 		self.loot_present = loot_present
+		self.name = str(self.location.x) + str(self.location.y)
 		locations[self.name] = self
+
+
+def check_location_existence(self):
+	"""
+		Check for the existence of a Location object and create it if it doesn't exist yet
+	"""
+	current_obj = self.return_object_name()
+	if current_obj in locations:
+		return
+	else:
+		current_obj = Location(current_location, False, True)
+
 
 
 def retrieve_Location(current_location):
@@ -272,7 +275,7 @@ def narrative(newplayer):
 	
 	else:
 		prRed("Under construction.  Returning to the beginning.  Pick a different direction next time.")
-		current_location.set_location(0, 0)
+		current_location.set_coords(0, 0)
 		narrative(newplayer)
 
 	go = raw_input(prompt)
@@ -341,7 +344,7 @@ def inv_list():
 def inv_add(item):
 	""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full.
 	"""
-	if len(inventory) < 3:
+	if len(inventory) < 5:
 		inventory.append(item)
 		prGreen("\n %s added to inventory." % (item))
 	else:
