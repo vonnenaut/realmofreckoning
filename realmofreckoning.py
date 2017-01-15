@@ -22,20 +22,17 @@
 #-------------------------------------------------------------------
 # --Location should call Point and Point has at least one method that logically should belong to Location --  rethink these two 
 #      classes and consider whether Point should be a superclass of Location.
-# --Make code more consistent (commenting, etc.) 
-# --Use a text-colorization system which works in Windows, not just Linux
-# --Get rid of anything named 'locale', replacing it with 'location'
 # --Get rid of 'newplayer' and just implement the starting narrative when calling narrative() for the first time because
 #	it's silly to have to keep track of whether the user is a newplayer or not for such a small reason
 # --Consider ways to reduce or eliminate all global variables (encapsulate into classes?)
 # --Add more text narrative of areas to explore
 # --add item persistence on the ground when items are dropped
-# --Implement item usage (health potion, equipping weapons)
-# --Implement health, stamina. magic meters
+# --Implement item usage (health potion, equipping weapons, etc.)
+# --Implement health, stamina, magic meters
 # --Implement battle system
 # --Consider whether to modify this with Python libraries, for fun.
 # Something like RenPy could introduce visuals, but might require a lot of 
-# studying to use and would require hand-made graphics.
+# studying to use and would require hand-made graphics.  Look into other options for visuals kids these days demand.
 #
 #====================================================================
 # Notes:
@@ -59,6 +56,9 @@
 #
 # Update 1/15/17:  Added support for colorized text in Windows and ability to check OS, supporting colorized text
 # for either Linux or Windows systems.  Changed some variable names to be more accurante (current_location --> current_location_coords, etc.)
+# Added several TO_DO: notes in the code to begin reorganizing the code in a way that makes more sense and gives me a little practice
+# with object-oriented programming.
+#
 #  ==========  End documentation  ==========
 ###
 
@@ -77,6 +77,9 @@ import sys, vtemu
 # into the initialization function.
 #
 
+
+# special definitions for colorized text
+##
 # if the terminal is Linux or Cygwin, use the following codes
 if sys.platform in ['linux2', 'cygwin']:
 	def prRed(prt): print("\033[91m {}\033[00m" .format(prt))
@@ -127,7 +130,10 @@ if sys.platform == 'win32':
 	def prPurple(prt): print("\x1b[1;35m {}\x1b[00m" .format(prt))
 	def prCyan(prt): print("\x1b[1;36m {}\x1b[00m" .format(prt))
 	def prWhite(prt): print("\x1b[1;37m {}\x1b[00m" .format(prt)) 
-	
+
+
+# Global variables
+##
 # stores x and y grid location for player's location on the map
 x = 0
 y = 0
@@ -150,8 +156,10 @@ inventory = []
 locations = {}
 
 
+# Classes
+##
 
-
+### TO_DO:  Consider making this a superclass of Location, just for fun.
 class Point(object):
 	"""
 	a simple class which defines x and y values for each location on the map
@@ -160,14 +168,12 @@ and returning a name based on converting and concatenating the x-y coordinates
 of the current object.  This will be used to name each object uniquely as it
 is created during the game.
 	"""
-
 	def __init__(self, x, y):
 		"""
 		initialize a point object with passed x and y coordinates
 		"""
 		self.x = x
 		self.y = y
-
 	
 	def move_north(self):
 		"""
@@ -175,7 +181,6 @@ is created during the game.
 		"""
 		self.y += 1
 		check_location_existence(self)
-
 	
 	def move_east(self):
 		"""
@@ -183,7 +188,6 @@ is created during the game.
 		"""
 		self.x += 1
 		check_location_existence(self)
-
 	
 	def move_south(self):
 		"""
@@ -191,7 +195,6 @@ is created during the game.
 		"""
 		self.y -= 1
 		check_location_existence(self)
-
 	
 	def move_west(self):
 		"""
@@ -199,17 +202,9 @@ is created during the game.
 		"""
 		self.x -= 1
 		check_location_existence(self)
-
 	
-	# def coords_to_string(self):
-		# """
-			# return a human-readable set of coordinates for testing purposes
-		# """
-		# return "(" + str(self.x) + ", " + str(self.y) +")"
-
 	def get_coords(self):
 		return [x, y]
-
 	
 	def return_object_name(self):
 		"""
@@ -218,7 +213,6 @@ is created during the game.
 			for retrieval.
 		"""
 		return str(self.x) + str(self.y)
-
 	
 	def set_coords(self, x, y):
 		"""
@@ -237,8 +231,7 @@ class Location(object):
 		monsters_present which tracks whether monsters are in the present location
 		loot_present which keeps track of whether loot is in the present location 
 		(either having been dropped or spawned initially)
-	"""
-	
+	"""	
 	def __init__(self, current_location_coords, monsters_present, loot_present):
 		self.location = current_location_coords
 		self.coords = current_location_coords.get_coords()
@@ -251,6 +244,10 @@ class Location(object):
 		locations[self.name] = self
 
 
+# Functions (TO_DO:  which probably belong inside classes)
+##
+
+### TO_DO:  move the two following location functions inside the Location class
 def check_location_existence(self):
 	"""
 		Check for the existence of a Location object and create it if it doesn't exist yet
@@ -260,8 +257,6 @@ def check_location_existence(self):
 		return
 	else:
 		current_obj = Location(current_location_coords, False, True)
-
-
 
 def retrieve_Location(current_location_coords):
 	""" attempts to return an object with a name based on the current location coordinates
@@ -275,7 +270,7 @@ def retrieve_Location(current_location_coords):
 	else:
 		return
 
-
+### TO_DO:  consider moving this into Location class
 def narrative(newplayer):
 	""" Handles delivery of narrative text based on location as well as any choices available in any given location
 	"""
@@ -314,7 +309,7 @@ def narrative(newplayer):
 	go = raw_input(prompt)
 	move(go, current_location_coords, newplayer)
 	
-
+### TO_DO:  If implementing a player class, consider moving this into it.
 def move(go, current_location_coords, newplayer):
 	""" Handles keeping track of player location based on which direction they head and their current location
 		arguments:
@@ -365,14 +360,14 @@ def move(go, current_location_coords, newplayer):
 	
 	narrative(newplayer)
 
-
+### TO_DO:  Create an Inventory Class (and a player class while you're at it, as Inventory's superclass) and
+# move all of these inv_ functions inside it.
 def inv_list():
 	""" Lists all the items in the player's inventory
 	"""
 	print "\nInventory: \n" 
 	prGreen(inventory)
 	return
-
 
 def inv_add(item):
 	""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full.
@@ -388,7 +383,6 @@ def inv_add(item):
 			inv_add(item)
 		else:
 			print "Dropped %s on the ground." % (item)
-
 
 def inv_prmpt_remove():
 	""" Prompts player to pick an item to remove from the inventory
@@ -414,7 +408,7 @@ def inv_remove(item):
 	"""
 	inventory.remove(item)
 
-
+### TO_DO:  Consider moving this into Location class
 def search_area(current_location_coords):
 	""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk.
 	"""
@@ -440,6 +434,7 @@ def search_area(current_location_coords):
 	object_name.loot_present = False
 	return
 
+### TO_DO:  If implementing a Player class, move this into it.
 def die():
 	"""
 		this function ends the program
@@ -448,12 +443,8 @@ def die():
 	sys.exit(message)
 
 
-# variables
-#
-
-# stores objects/instances of the Location class, i.e., each actual location on the map grid
-locations = {}
-
+# Game Loop
+##
 # this line sets up the first location, the player's starting point
 current_location_coords = Point(0, 0)
 location = Location(current_location_coords, False, True)
