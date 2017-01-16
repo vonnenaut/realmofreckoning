@@ -58,5 +58,6 @@
 # which I observed yesterday involving an error related to 'getdefaultlocale' which I can only assume has something to do 
 # with naming a test file 'locale.py' which then somehow overrode a standard python file of the same name.
 #
-# Thoughts 1/16/17:  Rewrite opening of story to be more interesting and include a challenge.  Idea:  start out on a ship, held captive, amnesia; immediate goals being to find out where you are how to escape and start to learn who you are.
+# Thoughts 1/16/17:  Rewrite opening of story to be more interesting and include a challenge.  Idea:  start out on a ship, held captive, amnesia; immediate goals being to find out where you are how to escape and start to learn who you are.  Give the player a reason to continue and an interesting/captivating start to the game.  It would be good to implement more look/search content and also to create some sort of simple crafting/item manipulation feature to the game as well as hit-points, conditions, battle system, etc.
+#
 #  ==========  End documentation  ==========
