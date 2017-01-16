@@ -58,4 +58,5 @@
 # which I observed yesterday involving an error related to 'getdefaultlocale' which I can only assume has something to do 
 # with naming a test file 'locale.py' which then somehow overrode a standard python file of the same name.
 #
+# Thoughts 1/16/17:  Rewrite opening of story to be more interesting and include a challenge.  Idea:  start out on a ship, held captive, amnesia; immediate goals being to find out where you are how to escape and start to learn who you are.
 #  ==========  End documentation  ==========
