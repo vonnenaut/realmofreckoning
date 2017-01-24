@@ -59,6 +59,10 @@
 # Added several TO_DO: notes in the code to begin reorganizing the code in a way that makes more sense and gives me a little practice
 # with object-oriented programming.
 #
+# Update 1/24/17:  I've gotten rid of the Point class and moved all of its functionality into the Location class.  I'm having a bit of trouble translating some of the variables and feel I might have multiple variables referring to the same thing, i.e., 'location', 'current_obj', 'current_location_coords' etc.  I will keep working to iron out the bugs first and then review the code to reduce redundancy and improve structure.  
+#
+# Update 1/24/17 P.S. -- I've gotten the program working again with the new oo-structure.  I don't think it reflects a full understanding of oo design but that will come with time and experience.  So far so good.  Time to break things again by restructuring to encapsulate functionality in a more logical way.
+#
 #  ==========  End documentation  ==========
 ###
 
@@ -132,11 +136,9 @@ if sys.platform == 'win32':
 	def prWhite(prt): print("\x1b[1;37m {}\x1b[00m" .format(prt)) 
 
 
+
 # Global variables
 ##
-# stores x and y grid location for player's location on the map
-x = 0
-y = 0
 
 #defines the input prompt
 prompt = '=---> '
@@ -152,77 +154,39 @@ newplayer = True
 # a list to keep track of items in player's inventory
 inventory = []
 
-# a list to hold all Location objects
+current_location = None
+
 locations = {}
+
 
 
 # Classes
 ##
+class Map(object):
+	# globals
+	##
+	global locations # a dictionary of map location objects, named as a string derived from location's coordinates
+	global current_location # a temporary reference to the player's current location object
 
-### TO_DO:  Consider making this a superclass of Location, just for fun.
-class Point(object):
-	"""
-	a simple class which defines x and y values for each location on the map
-and provides a method for printing the coordinates (for testing)
-and returning a name based on converting and concatenating the x-y coordinates
-of the current object.  This will be used to name each object uniquely as it
-is created during the game.
-	"""
-	def __init__(self, x, y):
-		"""
-		initialize a point object with passed x and y coordinates
-		"""
-		self.x = x
-		self.y = y
-	
-	def move_north(self):
-		"""
-			add one to the y value, i.e., move north
-		"""
-		self.y += 1
-		check_location_existence(self)
-	
-	def move_east(self):
-		"""
-		add one to the x value, i.e., move east
-		"""
-		self.x += 1
-		check_location_existence(self)
-	
-	def move_south(self):
-		"""
-			subtract one from the y value, i.e., move south
-		"""
-		self.y -= 1
-		check_location_existence(self)
-	
-	def move_west(self):
-		"""
-			subtract one from the x value, i.e., move west
-		"""
-		self.x -= 1
-		check_location_existence(self)
-	
-	def get_coords(self):
-		return [x, y]
-	
-	def return_object_name(self):
-		"""
-			Return a unique string made up of the x and y coordinates
-			to be used for naming each Location object as it is created and
-			for retrieval.
-		"""
-		return str(self.x) + str(self.y)
-	
-	def set_coords(self, x, y):
-		"""
-			Set the location.  This is only being used while the game is being built,
-			to account for stepping into a location that hasn't been written yet.
-		"""
-		self.x = x
-		self.y = y
+	# methods
+	##
+	def __init__(self):
+		locations = {}
+		self.locations = locations
+		# create starting location on world map
+		starting_l = Location([0,0], False, True)
+		# add starting location to dictionary containing all locations
+		locations[starting_l.name] = starting_l
+		self.current_location = starting_l
+		# this line starts the loop which gets user input for interacting with the environment
+		narrative(newplayer)
 
 
+
+
+# TO-DO: add the ability to drop items and have them persist
+		# but currently loot is handled directly by search so that
+		# functionality should be moved here or shared by search and Location
 class Location(object):
 	""" This class defines all of the attributes to be stored for each location object
 		initializes each location object with attributes for:
@@ -233,58 +197,111 @@ class Location(object):
 		(either having been dropped or spawned initially)
 	"""	
 	def __init__(self, current_location_coords, monsters_present, loot_present):
-		self.location = current_location_coords
-		self.coords = current_location_coords.get_coords()
-		self.monsters_present = monsters_present
-		# TO-DO: add the ability to drop items and have them persist
-		# but currently loot is handled directly by search so that
-		# functionality should be moved here or shared by search and Location
+		global current_location, locations
+
+		self.coords = current_location_coords
+		self.x = current_location_coords[0]
+		self.y = current_location_coords[1]		
+		self.monsters_present = monsters_present		
 		self.loot_present = loot_present
-		self.name = str(self.location.x) + str(self.location.y)
-		locations[self.name] = self
+		self.name = str(self.x) + str(self.y)	
+		current_location = self
+
+	def __str__(self):
+		return "Current player location " + str(self.name) + " is at " + str(self.coords) + ", monsters present? " + str(self.monsters_present) + " Loot present? " + str(self.loot_present)
+
+	def get_coords(self):
+		""" returns a list coordinate pair denoting location's position on map """
+		return [self.x, self.y]
+
+	def set_coords(self, x, y):
+		"""
+			Set the location.
+		"""
+		self.x = x
+		self.y = y
+	
+	def return_object_name(self):
+		"""
+			Return a unique string made up of the x and y coordinates
+			to be used for naming each Location object as it is created and
+			for retrieval.
+		"""
+		return str(self.x) + str(self.y)
+
+	def get_curr_location(self):
+		""" returns the player's current location object """
+		return self.current_location
+
+	def add_location(self, coords, mon, loot):
+		""" adds a location to the map """
+		l = Location(coords, mon, loot)
+		locations[l.name] = l
+
+	def check_location_existence(self):
+			""" Check for the existence of a Location object and create it if it doesn't exist yet.
+			This is called when moving to a different location on the map """
+			name = self.return_object_name()
+
+			if name in locations:
+				current_location = locations[name]
+				return
+			else:
+				coords = (self.x, self.y)
+				new_location = self.add_location(coords, False, True)
+				locations[name] = new_location
+
+	def retrieve_Location(current_location_coords):
+		""" attempts to return an object with a name based on the current location coordinates
+		if the object name doesn't exist, throws NameError exception
+		"""
+		try:
+			string = current_location_coords.return_object_name()
+			return locations[string]
+		except NameError:
+			print "Location does not exist."
+		else:
+			return
+
+	# Location class's methods for movement around the map
+	##
+	def move_north(self):
+		"""	add one to the y value, i.e., move north """
+		self.y += 1
+		self.check_location_existence()
+	
+	def move_east(self):
+		""" add one to the x value, i.e., move east """
+		self.x += 1
+		self.check_location_existence()
+	
+	def move_south(self):
+		""" subtract one from the y value, i.e., move south """
+		self.y -= 1
+		self.check_location_existence()
+	
+	def move_west(self):
+		""" subtract one from the x value, i.e., move west """
+		self.x -= 1
+		self.check_location_existence()	
+	
 
 
 # Functions (TO_DO:  which probably belong inside classes)
 ##
 
-### TO_DO:  move the two following location functions inside the Location class
-def check_location_existence(self):
-	"""
-		Check for the existence of a Location object and create it if it doesn't exist yet
-	"""
-	current_obj = self.return_object_name()
-	if current_obj in locations:
-		return
-	else:
-		current_obj = Location(current_location_coords, False, True)
-
-def retrieve_Location(current_location_coords):
-	""" attempts to return an object with a name based on the current location coordinates
-		if the object name doesn't exist, throws NameError exception
-	"""
-	try:
-		string = current_location_coords.return_object_name()
-		return locations[string]
-	except NameError:
-		print "Location does not exist."
-	else:
-		return
-
-### TO_DO:  consider moving this into Location class
 def narrative(newplayer):
-	""" Handles delivery of narrative text based on location as well as any choices available in any given location
-	"""
-	global current_location_coords
-
+	""" Handles delivery of narrative text based on location as well as any choices available in any given location """
+	global current_location
 
 	if newplayer == True:
 		print "\nYou awaken to the distant sound of commotion to your west.  You\n open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  \nTo your north in the distance is a fortress.  To your \neast is a forest and to your south is a riverbank\n with a boat tied at a pier.  \nWhich direction do you go? (enter: 'n', 's', 'e' or 'w')"
 		newplayer = False
 
-	elif current_location_coords.x == 0 and current_location_coords.y == 0:
+	elif current_location.x == 0 and current_location.y == 0:
 		print "\nYou are standing in the same field in which you first awoke without\n any memory of how you got here.  Which way?\n"
-	
-	elif current_location_coords.x == -1 and current_location_coords.y == 0:
+
+	elif current_location.x == -1 and current_location.y == 0:
 		print "\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\n life.  Do you approach the bodies? (y/n)"		
 		choice = raw_input(prompt)
 		if choice in {'yes', 'y', 'Y', 'Yes', 'YES', 'YEs', 'YeS', 'yeS'}:
@@ -295,41 +312,44 @@ def narrative(newplayer):
 		else:
 			print "Please type y or n."
 
-	elif current_location_coords.x == 0 and current_location_coords.y == 1:
+	elif current_location.x == 0 and current_location.y == 1:
 		print "\nYou walk for some time to finally arrive at an old, \napparently abandoned fortress which is crumbled with time.  \nThere is nothing here but ruins.  Which direction do you go\n from here?"	
-	
-	elif current_location_coords.x == 0 and current_location_coords.y == 2:
+
+	elif current_location.x == 0 and current_location.y == 2:
 		print "\nAs you head north around the abandoned and crumbling \nfortress you see a valley spread out before you.  In the \ndistance to the north is a village with wafts of smoke being \ncarried off by the breeze trailing over the scene \nlike the twisted tails of many kites.  To the west gently\n sloping foothills transition into distant blue\n mountains and to the east, a vast forest conspires to block out\n all surface detail."
-	
+
 	else:
 		prRed("Under construction.  Returning to the beginning.  Pick a different direction next time.")
-		current_location_coords.set_coords(0, 0)
+		current_location.set_coords(0, 0)
 		narrative(newplayer)
 
 	go = raw_input(prompt)
-	move(go, current_location_coords, newplayer)
+	move(go, newplayer)
+
 	
 ### TO_DO:  If implementing a player class, consider moving this into it.
-def move(go, current_location_coords, newplayer):
+def move(go, newplayer):
 	""" Handles keeping track of player location based on which direction they head and their current location
-		arguments:
-		go:  				user input ('n', 's', 'e', 'w', etc.)
-		current_location_coords: 	an instance of the Point class which specifies the user's current location with (x, y)
-		newplayer:			a boolean which keeps track of whether the player is just starting the game.
+		arguments
+		go  				user input ('n', 's', 'e', 'w', etc.)
+		current_location 	a reference to the instance of the Location class for the player's current location on the map
+		newplayer			a boolean which keeps track of whether the player is just starting the game.
 
 	"""
+	global current_location
+
+	
+	curr_loc = current_location
 
 	if go in {'n', 'north', 'North'}:
-		current_location_coords.move_north()
-
+		curr_loc.move_north()
 	elif go in {'s', 'south', 'South'}:
-		current_location_coords.move_south()
+		curr_loc.move_south()
 
 	elif go in {'e', 'east', 'East'}:
-		current_location_coords.move_east()
-
+		curr_loc.move_east()
 	elif go in {'w', 'west', 'West'}:
-		current_location_coords.move_west()
+		curr_loc.move_west()
 
 	elif go in {'q', 'quit', 'Quit'}:
 		prRed("Are you sure you want to exit? (y/n)")
@@ -352,7 +372,7 @@ def move(go, current_location_coords, newplayer):
 		narrative(newplayer)
 
 	elif go in {'x', 'search'}:
-		search_area(current_location_coords)
+		search_area(curr_loc)
 		narrative(newplayer)
 
 	else:
@@ -360,7 +380,8 @@ def move(go, current_location_coords, newplayer):
 	
 	narrative(newplayer)
 
-### TO_DO:  Create an Inventory Class (and a player class while you're at it, as Inventory's superclass) and
+
+### TO_DO:  Create an Inventory Class and/or a player class and
 # move all of these inv_ functions inside it.
 def inv_list():
 	""" Lists all the items in the player's inventory
@@ -409,29 +430,28 @@ def inv_remove(item):
 	inventory.remove(item)
 
 ### TO_DO:  Consider moving this into Location class
-def search_area(current_location_coords):
+def search_area(curr_loc_coords):
 	""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk.
 	"""
 	# retrieve Location object for current location to check 
 	# boolean variable for presence of loot at the location
-	curr_coord_name = current_location_coords.return_object_name()
-	object_name = retrieve_Location(current_location_coords)
-	loot_present = object_name.loot_present
+	global current_location
+	lp = current_location.loot_present
 
-	if curr_coord_name == '00' and loot_present == True:
+	if current_location.coords[0] == 0 and current_location.coords[1] == 0 and lp == True:
 		print "After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk."
 		inv_add("tinder")
 		inv_add("goat milk")		
-	elif curr_coord_name == '01' and loot_present == True:
+	elif current_location.coords[0] == 0 and current_location.coords[1] == 1 and lp == True:
 		print "Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old campfire."
 		inv_add("flint")
-	elif curr_coord_name == '02' and loot_present == True:
+	elif current_location.coords[0] == 0 and current_location.coords[1] == 2 and lp == True:
 		print "You stumble upon a rusty blade."
 		inv_add("rusty blade")
 	else:
 		prYellow("You found nothing useful here.")
 
-	object_name.loot_present = False
+	current_location.loot_present = False
 	return
 
 ### TO_DO:  If implementing a Player class, move this into it.
@@ -445,12 +465,5 @@ def die():
 
 # Game Loop
 ##
-# this line sets up the first location, the player's starting point
-current_location_coords = Point(0, 0)
-location = Location(current_location_coords, False, True)
-
-# initialize colorama text-colorization
-# init()
-
-# this line starts the loop which gets user input for interacting with the environment
-narrative(newplayer)
+# this line sets up the map and its first location, the player's starting point and calls narrative to start the game loop
+world = Map()
