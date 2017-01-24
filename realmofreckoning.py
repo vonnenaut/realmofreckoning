@@ -154,9 +154,9 @@ newplayer = True
 # a list to keep track of items in player's inventory
 inventory = []
 
-current_location = None
+current_location = None  # a temporary reference to the player's current location object
 
-locations = {}
+locations = {}  # a dictionary of map location objects, named as a string derived from location's coordinates
 
 
 
@@ -165,13 +165,11 @@ locations = {}
 class Map(object):
 	# globals
 	##
-	global locations # a dictionary of map location objects, named as a string derived from location's coordinates
-	global current_location # a temporary reference to the player's current location object
+	global locations, current_location 
 
 	# methods
 	##
 	def __init__(self):
-		locations = {}
 		self.locations = locations
 		# create starting location on world map
 		starting_l = Location([0,0], False, True)
