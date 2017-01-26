@@ -1,71 +1,3 @@
-# Realm of Reckoning
-# A Text-based adventure game
-# by
-# Daniel Ashcom
-# GNU GPL v 3.0 but I want my free beer.
-# 
-#
-#
-#===================================================================
-# Known Bugs:
-#--------------------------------------------------------------------
-#
-
-#
-#====================================================================
-# Fixed Bugs:
-#--------------------------------------------------------------------
-# 
-#
-#====================================================================
-# To-Do:
-#-------------------------------------------------------------------
-# --Location should call Point and Point has at least one method that logically should belong to Location --  rethink these two 
-#      classes and consider whether Point should be a superclass of Location.
-# --Get rid of 'newplayer' and just implement the starting narrative when calling narrative() for the first time because
-#	it's silly to have to keep track of whether the user is a newplayer or not for such a small reason
-# --Consider ways to reduce or eliminate all global variables (encapsulate into classes?)
-# --Add more text narrative of areas to explore
-# --add item persistence on the ground when items are dropped
-# --Implement item usage (health potion, equipping weapons, etc.)
-# --Implement health, stamina, magic meters
-# --Implement battle system
-# --Consider whether to modify this with Python libraries, for fun.
-# Something like RenPy could introduce visuals, but might require a lot of 
-# studying to use and would require hand-made graphics.  Look into other options for visuals kids these days demand.
-#
-#====================================================================
-# Notes:
-#--------------------------------------------------------------------
-#Update 11/21/16:  I realized when I tried to keep track of availability of items on each map location that this grid system is 
-# not going to work very conveniently for passing the grid location as a name for a dictionary name/value pair serving this purpose.
-# Now I realize I should have just used a traditional x,y grid to specify location from the start and I should define 0,0 as the 
-# furthest reaches of the map in the SW corner and begin somewhere NE of there (250,250)?  It's really arbitrary unless I want to build
-#impassable mountains or some other insurmountable obstacle into the map to the W and S of the starting location.
-#
-#Update 12/13/16:  I was able to implement a new Location class and an expanded Point class
-# which have both been tested successfully as designed.  Now I need to reintegrate them back
-# into this, the main program.  I'm going to have to modify narrative to handle to Point object
-# and should consider later creating a separate text file to hold narratives.
-#
-# Update 12/23/16:  I was able to reintegrate the new Location and modified Point classes back into 
-# the main program without much difficulty.  There are no known bugs but the game is very simple.
-# I am beginning to understand the suggestions to use Python as a prototyping language.  
-# It's so smooth and relatively easy to write with compared to Java.  I've cleaned up/standardized the comments
-# mostly, though I still need to define each argument and variable in my comments.  I've updated the To-Do list.
-#
-# Update 1/15/17:  Added support for colorized text in Windows and ability to check OS, supporting colorized text
-# for either Linux or Windows systems.  Changed some variable names to be more accurante (current_location --> current_location_coords, etc.)
-# Added several TO_DO: notes in the code to begin reorganizing the code in a way that makes more sense and gives me a little practice
-# with object-oriented programming.
-#
-# Update 1/24/17:  I've gotten rid of the Point class and moved all of its functionality into the Location class.  I'm having a bit of trouble translating some of the variables and feel I might have multiple variables referring to the same thing, i.e., 'location', 'current_obj', 'current_location_coords' etc.  I will keep working to iron out the bugs first and then review the code to reduce redundancy and improve structure.  
-#
-# Update 1/24/17 P.S. -- I've gotten the program working again with the new oo-structure.  I don't think it reflects a full understanding of oo design but that will come with time and experience.  So far so good.  Time to break things again by restructuring to encapsulate functionality in a more logical way.
-#
-#  ==========  End documentation  ==========
-###
-
 # imports
 ##
 #
@@ -151,12 +83,13 @@ go = 'nowhere'
 # TO-DO:  Get rid of this.  Create an Intro class to print the opening narrative text once and call it at the beginning before the first call to narrative()
 newplayer = True
 
-# a list to keep track of items in player's inventory
-inventory = []
+inventory = []  # a list to keep track of items in player's inventory
 
 current_location = None  # a temporary reference to the player's current location object
 
 locations = {}  # a dictionary of map location objects, named as a string derived from location's coordinates
+
+player = None		# variable to be used for player instance of Character class; instantiated in world instance of Map class
 
 
 
@@ -165,21 +98,22 @@ locations = {}  # a dictionary of map location objects, named as a string derive
 class Map(object):
 	# globals
 	##
-	global locations, current_location 
+	global locations, current_location, player
 
 	# methods
 	##
 	def __init__(self):
 		self.locations = locations
+		# create player instance of character class
+		player = Character('male', 'Bob', 10, 5, 3, 0, [])
+		print player
 		# create starting location on world map
 		starting_l = Location([0,0], False, True)
 		# add starting location to dictionary containing all locations
 		locations[starting_l.name] = starting_l
 		self.current_location = starting_l
 		# this line starts the loop which gets user input for interacting with the environment
-		narrative(newplayer)
-
-
+		player.narrative()
 
 
 # TO-DO: add the ability to drop items and have them persist
@@ -281,113 +215,115 @@ class Location(object):
 	def move_west(self):
 		""" subtract one from the x value, i.e., move west """
 		self.x -= 1
-		self.check_location_existence()	
+		self.check_location_existence()		
+
+
+# this class represents the player
+class Character(object):
+	def __init__(self, sex, name, hp, stam, mp, gld, inv):
+		self.sex = sex
+		self.name = name
+		self.hp = hp
+		self.stamina = stam
+		self.mp = mp
+		self.gold = gld
+		self.inventory =  inv
+
+	def __str__(self):
+		return "Player attributes for " + str(self.name) + ": sex: " + str(self.sex) + " hit points: " + str(self.hp) + " stamina: " + str(self.stamina) + " magic points: " + str(self.mp) + " gold: " + str(self.gold) + " inventory items: " + str(self.inventory)
+
+	def narrative(self):
+		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
+		global current_location, player, newplayer
 	
+		if newplayer == True:
+			print "\nYou awaken to the distant sound of commotion to your west.  You\n open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  \nTo your north in the distance is a fortress.  To your \neast is a forest and to your south is a riverbank\n with a boat tied at a pier.  \nWhich direction do you go? (enter: 'n', 's', 'e' or 'w')"
+			newplayer = False
+	
+		elif current_location.x == 0 and current_location.y == 0:
+			print "\nYou are standing in the same field in which you first awoke without\n 	any memory of how you got here.  Which way?\n"
+	
+		elif current_location.x == -1 and current_location.y == 0:
+			print "\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\n life.  Do you approach the bodies? (y/n)"			
+			choice = raw_input(prompt)
 
+			if choice in {'yes', 'y', 'Y', 'Yes', 'YES', 'YEs', 'YeS', 'yeS'}:
+				print "\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your 	neck.  Your life fades slowly."
+				die()
 
-# Functions (TO_DO:  which probably belong inside classes)
-##
+			elif choice in {'no', 'n', 'N', 'NO', 'nO'}:
+				print "\nWell, daylight's a-wasting.  Where to now?"
 
-def narrative(newplayer):
-	""" Handles delivery of narrative text based on location as well as any choices available in any given location """
-	global current_location
-
-	if newplayer == True:
-		print "\nYou awaken to the distant sound of commotion to your west.  You\n open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  \nTo your north in the distance is a fortress.  To your \neast is a forest and to your south is a riverbank\n with a boat tied at a pier.  \nWhich direction do you go? (enter: 'n', 's', 'e' or 'w')"
-		newplayer = False
-
-	elif current_location.x == 0 and current_location.y == 0:
-		print "\nYou are standing in the same field in which you first awoke without\n any memory of how you got here.  Which way?\n"
-
-	elif current_location.x == -1 and current_location.y == 0:
-		print "\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\n life.  Do you approach the bodies? (y/n)"		
-		choice = raw_input(prompt)
-		if choice in {'yes', 'y', 'Y', 'Yes', 'YES', 'YEs', 'YeS', 'yeS'}:
-			print "\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades slowly."
-			die()
-		elif choice in {'no', 'n', 'N', 'NO', 'nO'}:
-			print "\nWell, daylight's a-wasting.  Where to now?"
+			else:
+				print "Please type y or n."
+	
+		elif current_location.x == 0 and current_location.y == 1:
+			print "\nYou walk for some time to finally arrive at an old, \napparently abandoned fortress which is crumbled with time.  \nThere is nothing here 	but ruins.  Which direction do you go\n from here?"	
+	
+		elif current_location.x == 0 and current_location.y == 2:
+			print "\nAs you head north around the abandoned and crumbling \nfortress you see a valley spread out before you.  In the \ndistance to the north is a village with wafts of smoke being \ncarried off by the breeze trailing over the scene \nlike the twisted tails of many kites.  To the west gently\n sloping foothills transition into distant blue\n mountains and to the 	east, a vast forest conspires to block out\n all surface detail."
+	
 		else:
-			print "Please type y or n."
-
-	elif current_location.x == 0 and current_location.y == 1:
-		print "\nYou walk for some time to finally arrive at an old, \napparently abandoned fortress which is crumbled with time.  \nThere is nothing here but ruins.  Which direction do you go\n from here?"	
-
-	elif current_location.x == 0 and current_location.y == 2:
-		print "\nAs you head north around the abandoned and crumbling \nfortress you see a valley spread out before you.  In the \ndistance to the north is a village with wafts of smoke being \ncarried off by the breeze trailing over the scene \nlike the twisted tails of many kites.  To the west gently\n sloping foothills transition into distant blue\n mountains and to the east, a vast forest conspires to block out\n all surface detail."
-
-	else:
-		prRed("Under construction.  Returning to the beginning.  Pick a different direction next time.")
-		current_location.set_coords(0, 0)
-		narrative(newplayer)
-
-	go = raw_input(prompt)
-	move(go, newplayer)
-
+			prRed("Under construction.  Returning to the beginning.  Pick a different 	direction next time.")
+			current_location.set_coords(0, 0)
+			self.narrative()
 	
-### TO_DO:  If implementing a player class, consider moving this into it.
-def move(go, newplayer):
-	""" Handles keeping track of player location based on which direction they head and their current location
-		arguments
-		go  				user input ('n', 's', 'e', 'w', etc.)
-		current_location 	a reference to the instance of the Location class for the player's current location on the map
-		newplayer			a boolean which keeps track of whether the player is just starting the game.
+		# get user input
+		go = raw_input(prompt)
 
-	"""
-	global current_location
+		# call move method of player instance of Character class to handle user input
+		self.move(go)
 
+	def move(self, input):
+		""" Handles keeping track of player location based on which direction they head and their 	current location arguments	go user input ('n', 's', 'e', 'w', etc.)
+		current_location a reference to the instance of the Location class for the 	player's current location on the map newplayer a boolean which keeps track of whether the player is just starting the game.	"""
+		global current_location, newplayer	
+		
+		curr_loc = current_location
 	
-	curr_loc = current_location
-
-	if go in {'n', 'north', 'North'}:
-		curr_loc.move_north()
-	elif go in {'s', 'south', 'South'}:
-		curr_loc.move_south()
-
-	elif go in {'e', 'east', 'East'}:
-		curr_loc.move_east()
-	elif go in {'w', 'west', 'West'}:
-		curr_loc.move_west()
-
-	elif go in {'q', 'quit', 'Quit'}:
-		prRed("Are you sure you want to exit? (y/n)")
-		choice = raw_input(prompt)
-		if choice in {'y', 'Y', 'yes', 'Yes', 'YES'}:
-			die()
-		elif choice in {'n', 'N', 'No', 'NO'}:
-			print "Let's get back to it then."
-			narrative(newplayer)
-			return
+		if input in {'n', 'north', 'North'}:
+			curr_loc.move_north()
+		elif input in {'s', 'south', 'South'}:
+			curr_loc.move_south()
+	
+		elif input in {'e', 'east', 'East'}:
+			curr_loc.move_east()
+		elif input in {'w', 'west', 'West'}:
+			curr_loc.move_west()
+	
+		elif input in {'q', 'quit', 'Quit'}:
+			prRed("Are you sure you want to exit? (y/n)")
+			choice = raw_input(prompt)
+			if choice in {'y', 'Y', 'yes', 'Yes', 'YES'}:
+				die()
+			elif choice in {'n', 'N', 'No', 'NO'}:
+				print "Let's get back to it then."
+				
+			else:
+				print "Please type yes or no."
+	
+		elif input in {'h', 'H', 'help', 'Help', 'HELP', 'HALP', 'halp'}:
+			prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check the time\ni check your inventory\nq quit\nh help\n")
+				
+		elif input in {'i', 'inventory', 'I', 'Inventory', 'INVENTORY'}:
+			inv_list()
+				
+		elif input in {'x', 'search'}:
+			search_area(curr_loc)
+				
 		else:
-			print "Please type yes or no."
-
-	elif go in {'h', 'H', 'help', 'Help', 'HELP', 'HALP', 'halp'}:
-		prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check the time\ni check your inventory\nq quit\nh help\n")
-		narrative(newplayer)
-
-	elif go in {'i', 'inventory', 'I', 'Inventory', 'INVENTORY'}:
-		inv_list()
-		narrative(newplayer)
-
-	elif go in {'x', 'search'}:
-		search_area(curr_loc)
-		narrative(newplayer)
-
-	else:
-		print "Please type 'n', 's', 'e' or 'w'."
-	
-	narrative(newplayer)
+			print "Please type 'n', 's', 'e' or 'w'."
+		
+		self.narrative()
 
 
-### TO_DO:  Create an Inventory Class and/or a player class and
-# move all of these inv_ functions inside it.
+### TO_DO:  Create an Inventory Class and/or add to the Character class and place inventory functions there.
 def inv_list():
 	""" Lists all the items in the player's inventory
 	"""
 	print "\nInventory: \n" 
 	prGreen(inventory)
-	return
-
+	
 def inv_add(item):
 	""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full.
 	"""
