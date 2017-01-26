@@ -20,19 +20,13 @@
 #====================================================================
 # To-Do:
 #-------------------------------------------------------------------
-# --Location should call Point and Point has at least one method that logically should belong to Location --  rethink these two 
-#      classes and consider whether Point should be a superclass of Location.
-# --Get rid of 'newplayer' and just implement the starting narrative when calling narrative() for the first time because
-#	it's silly to have to keep track of whether the user is a newplayer or not for such a small reason
 # --Consider ways to reduce or eliminate all global variables (encapsulate into classes?)
 # --Add more text narrative of areas to explore
 # --add item persistence on the ground when items are dropped
 # --Implement item usage (health potion, equipping weapons, etc.)
-# --Implement health, stamina, magic meters
 # --Implement battle system
 # --Consider whether to modify this with Python libraries, for fun.
-# Something like RenPy could introduce visuals, but might require a lot of 
-# studying to use and would require hand-made graphics.  Look into other options for visuals kids these days demand.
+# --Consider creating a visual version of this game once it has more written content
 #
 #====================================================================
 # Notes:
