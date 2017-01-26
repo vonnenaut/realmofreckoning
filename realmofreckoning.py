@@ -14,13 +14,6 @@
 import sys, vtemu
 
 
-# The following is formatting for adding color to text for more visual variety and ease of reading
-# (may consider looking into Python Curses for similar functionality) If I create an Intro or 
-# Initialization function to eliminate newplayer, this is a good candidate for other code to move 
-# into the initialization function.
-#
-
-
 # special definitions for colorized text
 ##
 # if the terminal is Linux or Cygwin, use the following codes
@@ -51,8 +44,7 @@ if sys.platform == 'win32':
 #defines the input prompt
 prompt = '=---> '
 
-#sets the initial input value to 'nowhere' (should be n, s, e, w, h, t, i, q, or h, as currently implemented in the move() function)
-# Seems like there should be a purpose for calling it nowhere...  should I try to test and catch this somehow?  Haven't seen it cause any problems... yet.
+#sets the initial input value to 'nowhere' (should be n, s, e, w, h, t, i, q, or h, as currently implemented in the move() method of the Character class)
 go = 'nowhere'
 
 #tells the program whether to display the new player narrative introducing the game and the start scene
@@ -92,9 +84,7 @@ class Map(object):
 		player.narrative()
 
 
-# TO-DO: add the ability to drop items and have them persist
-		# but currently loot is handled directly by search so that
-		# functionality should be moved here or shared by search and Location
+
 class Location(object):
 	""" This class defines all of the attributes to be stored for each location object
 		initializes each location object with attributes for:
@@ -204,17 +194,18 @@ class Character(object):
 		self.mp = mp
 		self.gold = gld
 		self.inventory =  inv
+		self.newplayer = True
 
 	def __str__(self):
 		return "Player attributes for " + str(self.name) + ": sex: " + str(self.sex) + " hit points: " + str(self.hp) + " stamina: " + str(self.stamina) + " magic points: " + str(self.mp) + " gold: " + str(self.gold) + " inventory items: " + str(self.inventory)
 
 	def narrative(self):
 		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
-		global current_location, player, newplayer
+		global current_location
 	
-		if newplayer == True:
+		if self.newplayer == True:
 			print "\nYou awaken to the distant sound of commotion to your west.  You\n open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  \nTo your north in the distance is a fortress.  To your \neast is a forest and to your south is a riverbank\n with a boat tied at a pier.  \nWhich direction do you go? (enter: 'n', 's', 'e' or 'w')"
-			newplayer = False
+			self.newplayer = False
 	
 		elif current_location.x == 0 and current_location.y == 0:
 			print "\nYou are standing in the same field in which you first awoke without\n 	any memory of how you got here.  Which way?\n"
@@ -251,9 +242,10 @@ class Character(object):
 		self.move(go)
 
 	def move(self, input):
-		""" Handles keeping track of player location based on which direction they head and their 	current location arguments	go user input ('n', 's', 'e', 'w', etc.)
-		current_location a reference to the instance of the Location class for the 	player's current location on the map newplayer a boolean which keeps track of whether the player is just starting the game.	"""
-		global current_location, newplayer	
+		""" Handles keeping track of player location based on which direction they head and their 	current location arguments
+		input  				user input ('n', 's', 'e', 'w', etc.)
+		current_location 	a reference to the instance of the Location class for the player's current location on the map. """
+		global current_location
 		
 		curr_loc = current_location
 	
@@ -330,10 +322,9 @@ def inv_prmpt_remove():
 		choice = raw_input(prompt)
 	return
 
-# TO-DO:  add a feature which places the dropped item at the current grid location to be able to
-# pick it up later.
+# TO-DO:  add a feature which places the dropped item at the current grid location to be able to pick it up later. 
+
 # removes an item from the inventory
-#
 def inv_remove(item):
 	""" Removes an item from the player's inventory.  Called from inv_prmpt_remove() function
 	"""
