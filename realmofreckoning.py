@@ -1,3 +1,10 @@
+# Realm of Reckoning
+# A Text-based adventure game
+# by
+# Daniel Ashcom
+# GNU GPL v 3.0 but I want my free beer.
+# 
+
 # imports
 ##
 #
@@ -26,37 +33,6 @@ if sys.platform in ['linux2', 'cygwin']:
 	def prBlue(prt): print("\033[96m {}\033[00m" .format(prt))
 	def prLightGray(prt): print("\033[97m {}\033[00m" .format(prt))
 	def prBlack(prt): print("\033[98m {}\033[00m" .format(prt))
-
-"""
-VT100/ANSI Escape sequence reference chart:
-0	Reset all attributes
-1	Bright
-2	Dim
-4	Underscore	
-5	Blink
-7	Reverse
-8	Hidden
-
-	Foreground Colours
-30	Black
-31	Red
-32	Green
-33	Yellow
-34	Blue
-35	Magenta
-36	Cyan
-37	White
-
-	Background Colours
-40	Black
-41	Red
-42	Green
-43	Yellow
-44	Blue
-45	Magenta
-46	Cyan
-47	White
-"""
 
 if sys.platform == 'win32':	
 	def prRed(prt): print("\x1b[1;31m {}\x1b[00m" .format(prt))
