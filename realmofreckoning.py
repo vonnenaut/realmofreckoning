@@ -286,6 +286,7 @@ class Character(object):
 
 
 ### TO_DO:  Create an Inventory Class and/or add to the Character class and place inventory functions there.
+# TO-DO:  add a feature which places the dropped item at the current grid location to be able to pick it up later. 
 def inv_list():
 	""" Lists all the items in the player's inventory
 	"""
@@ -322,8 +323,6 @@ def inv_prmpt_remove():
 		choice = raw_input(prompt)
 	return
 
-# TO-DO:  add a feature which places the dropped item at the current grid location to be able to pick it up later. 
-
 # removes an item from the inventory
 def inv_remove(item):
 	""" Removes an item from the player's inventory.  Called from inv_prmpt_remove() function
@@ -355,7 +354,7 @@ def search_area(curr_loc_coords):
 	current_location.loot_present = False
 	return
 
-### TO_DO:  If implementing a Player class, move this into it.
+### TO_DO:  Move this into Character class.
 def die():
 	"""
 		this function ends the program
