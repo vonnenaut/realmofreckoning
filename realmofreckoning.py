@@ -84,18 +84,16 @@ class Map(object):
 		player.narrative()
 
 
-
 class Location(object):
 	""" This class defines all of the attributes to be stored for each location object
-		initializes each location object with attributes for:
-		location (point containing x and y coordinates)
-		name which is used to create the key for the dictionary storing each object
-		monsters_present which tracks whether monsters are in the present location
-		loot_present which keeps track of whether loot is in the present location 
-		(either having been dropped or spawned initially)
-	"""	
+		initializes attributes for:
+		location 			point containing x and y coordinates
+		name 				used to create the key for the dictionary storing each object
+		monsters_present 	tracks whether monsters are in the present location
+		loot_present 		keeps track of whether loot is in the present location 
+							(either having been dropped or spawned initially) """	
 	def __init__(self, current_location_coords, monsters_present, loot_present):
-		global current_location, locations
+		global current_location, locations, x, y
 
 		self.coords = current_location_coords
 		self.x = current_location_coords[0]
@@ -112,6 +110,12 @@ class Location(object):
 		""" returns a list coordinate pair denoting location's position on map """
 		return [self.x, self.y]
 
+	def get_x(self):
+		return self.x
+
+	def get_y(self):
+		return self.y
+
 	def set_coords(self, x, y):
 		"""
 			Set the location.
@@ -123,7 +127,7 @@ class Location(object):
 		"""
 			Return a unique string made up of the x and y coordinates
 			to be used for naming each Location object as it is created and
-			for retrieval.
+			for retrieval from the dictionary of Location objects.
 		"""
 		return str(self.x) + str(self.y)
 
@@ -184,8 +188,10 @@ class Location(object):
 		self.check_location_existence()		
 
 
-# this class represents the player
 class Character(object):
+	""" Represents the player with methods for inventory management, searching areas, generating narrative, moving and dying. """
+	global current_location
+
 	def __init__(self, sex, name, hp, stam, mp, gld, inv):
 		self.sex = sex
 		self.name = name
@@ -195,9 +201,73 @@ class Character(object):
 		self.gold = gld
 		self.inventory =  inv
 		self.newplayer = True
+		self.max_inv_size = 5
 
 	def __str__(self):
-		return "Player attributes for " + str(self.name) + ": sex: " + str(self.sex) + " hit points: " + str(self.hp) + " stamina: " + str(self.stamina) + " magic points: " + str(self.mp) + " gold: " + str(self.gold) + " inventory items: " + str(self.inventory)
+		return "Player attributes for " + str(self.name) + ": sex: " + str(self.sex) + " hit points: " + str(self.hp) + " stamina: " + str(self.stamina) + " magic points: " + str(self.mp) + " gold: " + str(self.gold) + " inventory items: " + str(self.inventory) + "New player? " + str(self.newplayer) + " Max # inventory items: " + str(self.max_inv_size)
+
+	# TO-DO:  add a feature which places the dropped item at the current grid location to be able to pick it up later. 
+	def inv_list(self):
+		""" Lists all the items in the player's inventory
+		"""
+		print "\nInventory: \n" 
+		prGreen(self.inventory)
+	
+	def inv_add(self, item):
+		""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full. """
+		if len(self.inventory) < 5:
+			self.inventory.append(item)
+			prGreen("\n %s added to inventory." % (item))
+		else:
+			print "Inventory full.  Drop an item? (y/n)"
+			choice = raw_input(prompt)
+			if choice in {'y', 'yes', 'Y', 'Yes', 'YES'}:
+				self.inv_prmpt_remove()
+				self.inv_add(item)
+			else:
+				print "Dropped %s on the ground." % (item)
+
+	def inv_prmpt_remove():
+		""" Prompts player to pick an item to remove from the inventory	"""
+		print "\nWhich item do you wish to remove?\n"
+		prGreen(inventory)
+		print "\n"
+		choice = raw_input(prompt)
+		if choice in inventory:
+			self.inv_remove(choice)
+			prGreen("%s dropped on the ground." % (choice))
+		else:
+			print "Item: %s not found.  Please type the name of the item you wish to remove." % (choice)
+			choice = raw_input(prompt)
+		return
+
+	def inv_remove(self, item):
+		""" Removes an item from the player's inventory.  Called from inv_prmpt_remove() function
+		"""
+		self.inventory.remove(item)
+
+	def search_area(self):
+		""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk. """
+		# retrieve Location object for current location to check boolean variable for presence of loot at the location
+		lp = current_location.loot_present
+		x = current_location.get_x()
+		y = current_location.get_y()
+
+		if x == 0 and y == 0 and lp == True:
+			print "After searching the area you find a bit of rope useful for tinder and a 	strangely-chilled glass of goat's milk."
+			self.inv_add("tinder")
+			self.inv_add("goat milk")		
+		elif x == 0 and y == 1 and lp == True:
+			print "Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old 	campfire."
+			self.inv_add("flint")
+		elif x == 0 and y == 2 and lp == True:
+			print "You stumble upon a rusty blade."
+			self.inv_add("rusty blade")
+		else:
+			prYellow("You found nothing useful here.")
+	
+		current_location.loot_present = False
+		return
 
 	def narrative(self):
 		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
@@ -215,8 +285,8 @@ class Character(object):
 			choice = raw_input(prompt)
 
 			if choice in {'yes', 'y', 'Y', 'Yes', 'YES', 'YEs', 'YeS', 'yeS'}:
-				print "\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your 	neck.  Your life fades slowly."
-				die()
+				print "\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades slowly."
+				self.die()
 
 			elif choice in {'no', 'n', 'N', 'NO', 'nO'}:
 				print "\nWell, daylight's a-wasting.  Where to now?"
@@ -236,34 +306,31 @@ class Character(object):
 			self.narrative()
 	
 		# get user input
-		go = raw_input(prompt)
+		user_input = raw_input(prompt)
 
 		# call move method of player instance of Character class to handle user input
-		self.move(go)
+		self.move(user_input)
 
 	def move(self, input):
-		""" Handles keeping track of player location based on which direction they head and their 	current location arguments
-		input  				user input ('n', 's', 'e', 'w', etc.)
+		""" Handles keeping track of player location based on which direction they head and their 	current location arguments input user input ('n', 's', 'e', 'w', etc.) 
 		current_location 	a reference to the instance of the Location class for the player's current location on the map. """
 		global current_location
-		
-		curr_loc = current_location
 	
 		if input in {'n', 'north', 'North'}:
-			curr_loc.move_north()
+			current_location.move_north()
 		elif input in {'s', 'south', 'South'}:
-			curr_loc.move_south()
+			current_location.move_south()
 	
 		elif input in {'e', 'east', 'East'}:
-			curr_loc.move_east()
+			current_location.move_east()
 		elif input in {'w', 'west', 'West'}:
-			curr_loc.move_west()
+			current_location.move_west()
 	
 		elif input in {'q', 'quit', 'Quit'}:
 			prRed("Are you sure you want to exit? (y/n)")
 			choice = raw_input(prompt)
 			if choice in {'y', 'Y', 'yes', 'Yes', 'YES'}:
-				die()
+				self.die()
 			elif choice in {'n', 'N', 'No', 'NO'}:
 				print "Let's get back to it then."
 				
@@ -274,93 +341,20 @@ class Character(object):
 			prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check the time\ni check your inventory\nq quit\nh help\n")
 				
 		elif input in {'i', 'inventory', 'I', 'Inventory', 'INVENTORY'}:
-			inv_list()
+			self.inv_list()
 				
 		elif input in {'x', 'search'}:
-			search_area(curr_loc)
+			self.search_area()
 				
 		else:
 			print "Please type 'n', 's', 'e' or 'w'."
 		
 		self.narrative()
 
-
-### TO_DO:  Create an Inventory Class and/or add to the Character class and place inventory functions there.
-# TO-DO:  add a feature which places the dropped item at the current grid location to be able to pick it up later. 
-def inv_list():
-	""" Lists all the items in the player's inventory
-	"""
-	print "\nInventory: \n" 
-	prGreen(inventory)
-	
-def inv_add(item):
-	""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full.
-	"""
-	if len(inventory) < 5:
-		inventory.append(item)
-		prGreen("\n %s added to inventory." % (item))
-	else:
-		print "Inventory full.  Drop an item? (y/n)"
-		choice = raw_input(prompt)
-		if choice in {'y', 'yes', 'Y', 'Yes', 'YES'}:
-			inv_prmpt_remove()
-			inv_add(item)
-		else:
-			print "Dropped %s on the ground." % (item)
-
-def inv_prmpt_remove():
-	""" Prompts player to pick an item to remove from the inventory
-	"""
-	print "\nWhich item do you wish to remove?\n"
-	prGreen(inventory)
-	print "\n"
-	choice = raw_input(prompt)
-	if choice in inventory:
-		inv_remove(choice)
-		prGreen("%s dropped on the ground." % (choice))
-	else:
-		print "Item: %s not found.  Please type the name of the item you wish to remove." % (choice)
-		choice = raw_input(prompt)
-	return
-
-# removes an item from the inventory
-def inv_remove(item):
-	""" Removes an item from the player's inventory.  Called from inv_prmpt_remove() function
-	"""
-	inventory.remove(item)
-
-### TO_DO:  Consider moving this into Location class
-def search_area(curr_loc_coords):
-	""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk.
-	"""
-	# retrieve Location object for current location to check 
-	# boolean variable for presence of loot at the location
-	global current_location
-	lp = current_location.loot_present
-
-	if current_location.coords[0] == 0 and current_location.coords[1] == 0 and lp == True:
-		print "After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk."
-		inv_add("tinder")
-		inv_add("goat milk")		
-	elif current_location.coords[0] == 0 and current_location.coords[1] == 1 and lp == True:
-		print "Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old campfire."
-		inv_add("flint")
-	elif current_location.coords[0] == 0 and current_location.coords[1] == 2 and lp == True:
-		print "You stumble upon a rusty blade."
-		inv_add("rusty blade")
-	else:
-		prYellow("You found nothing useful here.")
-
-	current_location.loot_present = False
-	return
-
-### TO_DO:  Move this into Character class.
-def die():
-	"""
-		this function ends the program
-	"""
-	message = prRed("\nGame Over.\n")
-	sys.exit(message)
+	def die(self):
+		"""	this function ends the program """
+		message = prRed("\nGame Over.\n")
+		sys.exit(message)
 
 
 # Game Loop
