@@ -59,7 +59,7 @@
 #
 # Update 1/24/17 P.S. -- I've gotten the program working again with the new oo-structure.  I don't think it reflects a full understanding of oo design but that will come with time and experience.  So far so good.  Time to break things again by restructuring to encapsulate functionality in a more logical way.
 #
-#
+# Update 2/17/17:  I moved the methods for adding, retrieving and checking the existence of Locations into the Map class from the Location class since it just makes more sense logically.  I also moved the narrative method from the Character class into the Map class.
 #
 #
 """
@@ -109,7 +109,7 @@ import sys, vtemu
 #defines the input prompt
 prompt = '=---> '
 
-#sets the initial input value to 'nowhere' (should be n, s, e, w, h, t, i, q, or h, as currently implemented in the move() method of the Character class)
+#sets the initial input value to 'nowhere' (should be n, s, e, w, h, t, i, q, or h, as currently implemented in the keydown() method of the Character class)
 go = 'nowhere'
 
 #tells the program whether to display the new player narrative introducing the game and the start scene
@@ -208,8 +208,6 @@ class Map(object):
 	@classmethod
 	def teleport(cls, coords):
 		loc = Map.retrieve_Location(coords)
-		# TEST
-		print "player:",player
 		player.set_Coords(coords)
 		Map.narrative()
 
@@ -222,7 +220,7 @@ class Map(object):
 			print "\n     You awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  \nTo your north in the distance is a fortress.  To your \neast is a forest and to your south is a riverbank\n with a boat tied at a pier.  \nWhich direction do you go? (enter: 'n', 's', 'e' or 'w')"
 			player.newplayer = False
 	
-		elif player.coords[0] == 0 and player.coords[1] == 0:
+		elif player.coords == [0,0]:
 			print "\n     You are standing in the same field in which you first awoke without\nany memory of how you got here.  Which way?\n"
 	
 		elif player.coords[0] == -1 and player.coords[1] == 0:
@@ -251,9 +249,11 @@ class Map(object):
 	
 		# get user input
 		user_input = raw_input(prompt)
+		# get rid of any capitalized typing by the user
+		user_input.lower()
 
-		# call move method of player instance of Character class to handle user input
-		player.move(user_input)
+		# call keydown method of player instance of Character class to handle user input
+		player.keydown(user_input)
 
 
 
@@ -325,7 +325,7 @@ class Character(object):
 		self.coords[0] = coords[0]
 		self.coords[1] = coords[1]
 
-	# methods for movement around the map
+	# methods for movement around the map and user input
 	def move_north(self):
 		"""	add one to the y value, i.e., move north """
 		self.coords[1] += 1
@@ -346,12 +346,47 @@ class Character(object):
 		self.coords[0] -= 1
 		Map.check_location_existence(self.coords)
 
-	# TO-DO:  add a feature which places the dropped item at the current grid location to be able to pick it up later. 
+	def quit_game(self):
+		prRed("Are you sure you want to exit? (y/n)")
+		choice = raw_input(prompt)
+		if choice.lower() in {'y', 'Y', 'yes', 'Yes', 'YES'}:
+			self.die()
+		elif choice.lower() in {'n', 'no'}:
+			print "Let's get back to it then."
+
+	def help_menu():
+		prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check # the time\ni check your inventory\na attributes\nq quit\nh help\n")
+
 	def inv_list(self):
 		""" Lists all the items in the player's inventory
 		"""
 		print "\nInventory: \n" 
 		prGreen(self.inventory)
+
+	def attrib_list():
+		print self
+
+	def search_area(self):
+		""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk. """
+		# retrieve Location object for current location to check boolean variable for presence of loot at the location
+		lp = current_location.loot_present
+		
+		if self.coords == [0,0] and lp == True:
+			print "After searching the area you find a bit of rope useful for tinder and a 	strangely-chilled glass of goat's milk."
+			self.inv_add("tinder")
+			self.inv_add("goat milk")		
+		elif self.coords == [0,1] and lp == True:
+			print "Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old 	campfire."
+			self.inv_add("flint")
+		elif self.coords == [0,2] and lp == True:
+			print "You stumble upon a rusty blade."
+			self.inv_add("rusty blade")
+		else:
+			prYellow("You found nothing useful here.")
+	
+		current_location.loot_present = False
+		return
+	
 	
 	def inv_add(self, item):
 		""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full. """
@@ -385,70 +420,19 @@ class Character(object):
 		""" Removes an item from the player's inventory.  Called from inv_prmpt_remove() function
 		"""
 		self.inventory.remove(item)
+	
 
-	def search_area(self):
-		""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk. """
-		# retrieve Location object for current location to check boolean variable for presence of loot at the location
-		lp = current_location.loot_present
-		
-		if self.coords == [0,0] and lp == True:
-			print "After searching the area you find a bit of rope useful for tinder and a 	strangely-chilled glass of goat's milk."
-			self.inv_add("tinder")
-			self.inv_add("goat milk")		
-		elif self.coords == [0,1] and lp == True:
-			print "Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old 	campfire."
-			self.inv_add("flint")
-		elif self.coords == [0,2] and lp == True:
-			print "You stumble upon a rusty blade."
-			self.inv_add("rusty blade")
-		else:
-			prYellow("You found nothing useful here.")
-	
-		current_location.loot_present = False
-		return
 
-	## moved Narrative from here to Map class
+	def keydown(self, user_input):
+		""" Handles user input """
 
-	def move(self, input):
-		""" Handles keeping track of player location based on which direction they head and their 	current location arguments input user input ('n', 's', 'e', 'w', etc.) 
-		current_location 	a reference to the instance of the Location class for the player's current location on the map. """
-	
-		if input.lower() in {'n', 'north'}:
-			self.move_north()
-		elif input.lower() in {'s', 'south'}:
-			self.move_south()
-	
-		elif input.lower() in {'e', 'east'}:
-			self.move_east()
-		elif input.lower() in {'w', 'west'}:
-			self.move_west()
-	
-		elif input.lower() in {'q', 'quit'}:
-			prRed("Are you sure you want to exit? (y/n)")
-			choice = raw_input(prompt)
-			if choice.lower() in {'y', 'Y', 'yes', 'Yes', 'YES'}:
-				self.die()
-			elif choice.lower() in {'n', 'no'}:
-				print "Let's get back to it then."
-				
-			else:
-				print "Please type yes or no."
-	
-		elif input.lower() in {'h', 'help', 'halp'}:
-			prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check the time\ni check your inventory\na attributes\nq quit\nh help\n")
-				
-		elif input.lower() in {'i', 'inventory'}:
-			self.inv_list()
+		# dictionary of possible user inputs with matching names of methods to call for each
+		inputs = {"n": self.move_north, "s": self.move_south, "e": self.move_east, "w": self.move_west, "q": self.quit_game, "h": self.help_menu, "i": self.inv_list, "a": self.attrib_list, "x": self.search_area}		
 
-		elif input.lower() in {'a', 'attrib', 'attributes'}:
-			print self
-				
-		elif input.lower() in {'x', 'search'}:
-			self.search_area()
-				
-		else:
-			print "Please type 'n', 's', 'e' or 'w'."
-		global world
+		if user_input in inputs:
+			inputs[user_input]()  # call the function that matches the key pressed by the user
+		if user_input not in inputs:
+			print "Please type 'h' for help."
 		Map.narrative()
 
 	def die(self):
