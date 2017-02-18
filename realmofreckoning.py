@@ -190,16 +190,19 @@ class Map(object):
 		# call keydown method of player instance of Character class to handle user input
 		self.keydown(user_input)
 
-	def next_choice(choice_key):
+	def next_choice(self, choice_key):
 		""" increments choice_key's 3rd number to proceed a deeper level in the branching choices for any location """
-		choice_key[2] += 1
-		encounter(choice_key)
+		choice_key_list = list(choice_key)
+		choice_key_list[2] += 1
+		self.encounter(choice_key_list)
 
 	def encounter(self, choice_key):
 		# a third number has been added to the tuple key to represent level of depth (decision/choice 1: outcome, decision/choice 2/outcome, etc.)  The Value of each of these keys goes in the form:  ['user-input choice', print narrative, command(s) to execute]
 		
 		# prompt user for input in respose to encounter
 		input = raw_input(prompt).lower()
+
+		choice_key = tuple(choice_key)
 
 		outcomes = { (-1,0,1): 
 								{'y': ["\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades slowly.", player.die], 'n': ["\nWell, daylight's a-wasting.  Where to now?"]}, 
@@ -210,7 +213,10 @@ class Map(object):
 			print outcomes[choice_key][input][0]
 			if len(outcomes[choice_key][input]) > 1:
 				for i in range (1,len(outcomes[choice_key][input])):
-					outcomes[choice_key][input][i]()
+					if outcomes[choice_key][input][i] == self.next_choice:
+						self.next_choice(choice_key)
+					else:
+						outcomes[choice_key][input][i]()
 		else:
 			# for k in outcomes[choice_key]:
 				# print "Please type "
