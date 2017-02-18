@@ -192,9 +192,10 @@ class Map(object):
 
 	def next_choice(self, choice_key):
 		""" increments choice_key's 3rd number to proceed a deeper level in the branching choices for any location """
-		choice_key_list = list(choice_key)
-		choice_key_list[2] += 1
-		self.encounter(choice_key_list)
+		# cast choice_key back as a list so that it can be modified.  I'm pretty sure others would frown on this approach but it works and I have no idea of how else to create this functionality
+		choice_key = list(choice_key)
+		choice_key[2] += 1
+		self.encounter(choice_key)
 
 	def encounter(self, choice_key):
 		# a third number has been added to the tuple key to represent level of depth (decision/choice 1: outcome, decision/choice 2/outcome, etc.)  The Value of each of these keys goes in the form:  ['user-input choice', print narrative, command(s) to execute]
@@ -202,6 +203,7 @@ class Map(object):
 		# prompt user for input in respose to encounter
 		input = raw_input(prompt).lower()
 
+		# cast choice_key as a tuple so it can be used as a dictionary key
 		choice_key = tuple(choice_key)
 
 		outcomes = { (-1,0,1): 
