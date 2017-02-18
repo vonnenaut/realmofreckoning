@@ -18,8 +18,9 @@
 # 
 #
 #====================================================================
-# To-Do:
+# To-Do/Ideas:
 #-------------------------------------------------------------------
+# -- Implement a more readable, concise way to handle logic, replacing if-else with dictionaries (I think ... ?) --  See Coursera Fundamentals of Computing 2of7, wk 7b Programming Tips (02:30)
 # --Consider ways to reduce or eliminate all global variables (encapsulate into classes?)
 # --Add more text narrative of areas to explore
 # --add item persistence on the ground when items are dropped
@@ -27,6 +28,7 @@
 # --Implement battle system
 # --Consider whether to modify this with Python libraries, for fun.
 # --Consider creating a visual version of this game once it has more written content
+# --Consider how to create randomly-generated areas with randomly-generated loot (<--  might be a good first step to implement.  See 'Design Patterns:  Elements of Reusable OO Software', p. 105)
 #
 #====================================================================
 # Notes:
@@ -57,8 +59,9 @@
 #
 # Update 1/24/17 P.S. -- I've gotten the program working again with the new oo-structure.  I don't think it reflects a full understanding of oo design but that will come with time and experience.  So far so good.  Time to break things again by restructuring to encapsulate functionality in a more logical way.
 #
+# Update 2/17/17:  I moved the methods for adding, retrieving and checking the existence of Locations into the Map class from the Location class since it just makes more sense logically.  I also moved the narrative method from the Character class into the Map class.
 #
-#
+# Update 2/18/17:  I rewrote both the move and search_area methods to simplify moving around the map and adding new content to new areas of the map by switching from if-else statements to dictionaries.  I also rewrote 'move', renaming it 'keydown' and simplifying its code similarly using a dictionary in place of if-else statements.  I am definitely now a fan of dictionaries and learned this usage from Coursera's Fundamentals of Computing (2of7).
 #
 """
 VT100/ANSI Escape sequence reference chart:
