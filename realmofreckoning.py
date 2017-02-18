@@ -4,24 +4,11 @@
 # Daniel Ashcom
 # GNU GPL v 3.0 but I want my free beer.
 # 
-#
-#
-#===================================================================
-# Known Bugs:
-#--------------------------------------------------------------------
-#
-
-#
-#====================================================================
-# Fixed Bugs:
-#--------------------------------------------------------------------
-# 
-#
 #====================================================================
 # To-Do/Ideas:
 #-------------------------------------------------------------------
-# -- Implement a more readable, concise way to handle logic, replacing if-else with dictionaries (I think ... ?) --  See Coursera Fundamentals of Computing 2of7, wk 7b Programming Tips (02:30)
-# --Consider ways to reduce or eliminate all global variables (encapsulate into classes?)
+# -- Continue with implementing more readable, concise ways of handling logic, replacing if-else with dictionaries (I think ... ?) --  See Coursera Fundamentals of Computing 2of7, wk 7b Programming Tips (02:30)
+# 
 # --Add more text narrative of areas to explore
 # --add item persistence on the ground when items are dropped
 # --Implement item usage (health potion, equipping weapons, etc.)
@@ -30,68 +17,6 @@
 # --Consider creating a visual version of this game once it has more written content
 # --Consider how to create randomly-generated areas with randomly-generated loot (<--  might be a good first step to implement.  See 'Design Patterns:  Elements of Reusable OO Software', p. 105)
 #
-#====================================================================
-# Notes:
-#--------------------------------------------------------------------
-#Update 11/21/16:  I realized when I tried to keep track of availability of items on each map location that this grid system is 
-# not going to work very conveniently for passing the grid location as a name for a dictionary name/value pair serving this purpose.
-# Now I realize I should have just used a traditional x,y grid to specify location from the start and I should define 0,0 as the 
-# furthest reaches of the map in the SW corner and begin somewhere NE of there (250,250)?  It's really arbitrary unless I want to build
-#impassable mountains or some other insurmountable obstacle into the map to the W and S of the starting location.
-#
-#Update 12/13/16:  I was able to implement a new Location class and an expanded Point class
-# which have both been tested successfully as designed.  Now I need to reintegrate them back
-# into this, the main program.  I'm going to have to modify narrative to handle to Point object
-# and should consider later creating a separate text file to hold narratives.
-#
-# Update 12/23/16:  I was able to reintegrate the new Location and modified Point classes back into 
-# the main program without much difficulty.  There are no known bugs but the game is very simple.
-# I am beginning to understand the suggestions to use Python as a prototyping language.  
-# It's so smooth and relatively easy to write with compared to Java.  I've cleaned up/standardized the comments
-# mostly, though I still need to define each argument and variable in my comments.  I've updated the To-Do list.
-#
-# Update 1/15/17:  Added support for colorized text in Windows and ability to check OS, supporting colorized text
-# for either Linux or Windows systems.  Changed some variable names to be more accurante (current_location --> current_location_coords, etc.)
-# Added several TO_DO: notes in the code to begin reorganizing the code in a way that makes more sense and gives me a little practice
-# with object-oriented programming.
-#
-# Update 1/24/17:  I've gotten rid of the Point class and moved all of its functionality into the Location class.  I'm having a bit of trouble translating some of the variables and feel I might have multiple variables referring to the same thing, i.e., 'location', 'current_obj', 'current_location_coords' etc.  I will keep working to iron out the bugs first and then review the code to reduce redundancy and improve structure.  
-#
-# Update 1/24/17 P.S. -- I've gotten the program working again with the new oo-structure.  I don't think it reflects a full understanding of oo design but that will come with time and experience.  So far so good.  Time to break things again by restructuring to encapsulate functionality in a more logical way.
-#
-# Update 2/17/17:  I moved the methods for adding, retrieving and checking the existence of Locations into the Map class from the Location class since it just makes more sense logically.  I also moved the narrative method from the Character class into the Map class.
-#
-#
-"""
-VT100/ANSI Escape sequence reference chart:
-0	Reset all attributes
-1	Bright
-2	Dim
-4	Underscore	
-5	Blink
-7	Reverse
-8	Hidden
-
-	Foreground Colours
-30	Black
-31	Red
-32	Green
-33	Yellow
-34	Blue
-35	Magenta
-36	Cyan
-37	White
-
-	Background Colours
-40	Black
-41	Red
-42	Green
-43	Yellow
-44	Blue
-45	Magenta
-46	Cyan
-47	White
-"""
 #  ==========  End documentation  ==========
 ###
 
@@ -100,11 +25,12 @@ VT100/ANSI Escape sequence reference chart:
 #
 # sys is for exiting the program
 # vtemu is a VT100 emulator for Windows which colorizes text
-import sys, vtemu
+import sys, vtemu, time
 
 
 # Global variables
 ##
+start_time = time.time() # set starting time
 
 #defines the input prompt
 prompt = '=---> '
@@ -164,11 +90,29 @@ class Map(object):
 
 		self.locations = locations
 		# create player instance of character class
-		player = Character('male', 'Bob', 10, 5, 3, 0, [], [0,0])
+		self.create_Char()
 		# create starting location on world map
 		starting_l = Location([0,0], False, True)
 		# this line starts the loop which gets user input for interacting with the environment
-		self.narrative()
+		self.narrative(player.get_coords())
+
+	def create_Char(self):
+		global player
+		""" prompts user to answer questions in order to create their character """
+		# 
+		# print "Welcome to Realm of Reckoning.  Please answer the following questions to create your character:"
+		# 			
+		# print "1.  What is your character's gender?"
+		# sex = raw_input("?")
+		# if sex not in ["m", "male", "f", "female"]:
+			# print "Please enter male or female."
+		# 			
+		# print "2.  What is your character's name?"
+		# name = raw_input("?")
+		# 
+		# player = Character(sex, name, 10, 5, 3, 0, [], [0,0])
+		# print "Ok, here's some information about your character: ", player
+		player = Character("male", "Drizzt", 10, 5, 3, 0, [], [0,0])
 
 	@classmethod
 	def add_location(cls, coords, mon, loot):
@@ -177,14 +121,14 @@ class Map(object):
 		locations[l.name] = l
 
 	@classmethod
-	def coords_to_Name(cls, coords):
+	def coords_to_name(cls, coords):
 		name = str(coords[0]) + str(coords[1])
 		return name
 
 	@classmethod
 	def check_location_existence(cls, coords):
 		""" Check for the existence of a Location object and create it if it doesn't exist yet.  This is called when moving to a different location on the map """
-		name = Map.coords_to_Name(coords)
+		name = Map.coords_to_name(coords)
 
 		if name in locations:
 			current_location = locations[name]
@@ -198,54 +142,46 @@ class Map(object):
 		""" attempts to return an object with a name based on the current location coordinates 	if the object name doesn't exist, throws NameError exception """
 
 		try:
-			string = coords_to_Name(current_location_coords)
+			string = coords_to_name(current_location_coords)
 			return locations[string]
 		except NameError:
 			print "Location does not exist."
 		else:
 			return
 
-	@classmethod
-	def teleport(cls, coords):
-		loc = Map.retrieve_Location(coords)
-		player.set_Coords(coords)
-		Map.narrative()
+	def teleport(self, coords):
+		#loc = self.retrieve_Location(coords)
+		player.set_coords(coords)
+		print "Player coords: ",player.get_coords()
+		self.narrative(player.get_coords())
 
-	@classmethod
-	def narrative(cls):
+	def narrative(self, area):
 		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
-		global player
-			
+		global player, narratives
+
+		key = tuple(area)
+
+		narratives = {(0,0): ["\n     You are standing in the same field in which you first awoke\nwithout any memory of how you got here.  Which way?\n"],
+					  (-1,0): ["\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\n life.  Do you approach the bodies? (y/n)", self.encounter],
+					  (0,1): ["\n     [Missing narrative]"],
+					  (0,2): ["\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."]}
+
 		if player.newplayer == True:
-			print "\n     You awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  \nTo your north in the distance is a fortress.  To your \neast is a forest and to your south is a riverbank\n with a boat tied at a pier.  \nWhich direction do you go? (enter: 'n', 's', 'e' or 'w')"
+			print "\n     You awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  To your \nnorth in the distance is a fortress.  To your east is a \nforest and to your south is a riverbank with \aa boat tied at a pier.  \n\nWhich direction do you go? (Press 'h' for help)"
 			player.newplayer = False
-	
-		elif player.coords == [0,0]:
-			print "\n     You are standing in the same field in which you first awoke without\nany memory of how you got here.  Which way?\n"
-	
-		elif player.coords[0] == -1 and player.coords[1] == 0:
-			print "\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\n life.  Do you approach the bodies? (y/n)"			
-			choice = raw_input(prompt)
 
-			if choice in {'yes', 'y', 'Y', 'Yes', 'YES', 'YEs', 'YeS', 'yeS'}:
-				print "\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades slowly."
-				self.die()
+		elif key in narratives:
+			print narratives[key][0]
+			if len(narratives[key]) > 1:  # if there are commands associated with this area, execute them
+				for i in range(1,len(narratives[key])):
+					temp_list = area[:]
+					temp_list.append(i)
+					choice_key = tuple(temp_list)
+					narratives[key][i](choice_key)
 
-			elif choice in {'no', 'n', 'N', 'NO', 'nO'}:
-				print "\nWell, daylight's a-wasting.  Where to now?"
-
-			else:
-				print "Please type y or n."
-	
-		elif player.coords[0] == 0 and player.coords[1] == 1:
-			print "\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which is crumbled with time.  \nThere is nothing here 	but ruins.  Which direction do you go\n from here?"	
-	
-		elif player.coords[0] == 0 and player.coords[1] == 2:
-			print "\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."
-	
-		else:
-			prRed("Under construction.  Returning to the beginning.  Pick a different 	direction next time.")
-			Map.teleport([0,0])
+ 		else:
+			prRed("Under construction.  Returning to the beginning.")
+			self.teleport([0,0])
 	
 		# get user input
 		user_input = raw_input(prompt)
@@ -253,7 +189,41 @@ class Map(object):
 		user_input.lower()
 
 		# call keydown method of player instance of Character class to handle user input
-		player.keydown(user_input)
+		self.keydown(user_input)
+
+	def encounter(self, choice_key):
+		# a third number has been added to the tuple key to represent level of depth (decision/choice 1: outcome, decision/choice 2/outcome, etc.)  The Value of each of these keys goes in the form:  ['user-input choice', print narrative, command(s) to execute]
+		
+		# prompt user for input in respose to encounter
+		input = raw_input(prompt).lower()
+
+		outcomes = { (-1,0,1): 
+								{'y': ["\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades slowly.", player.die], 'n': ["\nWell, daylight's a-wasting.  Where to now?"] } }
+		if choice_key in outcomes:
+			print outcomes[choice_key][input][0]
+			if len(outcomes[choice_key][input]) > 1:
+				for i in range (1,len(outcomes[choice_key][input])):
+					outcomes[choice_key][input][i]()
+		else:
+			for k in outcomes[choice_key]:
+				print "Please type "
+				for i in outcomes[choice_key]:
+					print "",outcomes[choice_key].key()
+
+	def keydown(self, user_input):
+		""" Handles user input """
+
+		# dictionary of possible user inputs with matching names of methods to call for each
+		inputs = {"n": player.move, "s": player.move, "e": player.move, "w": player.move, "q": player.quit_game, "h": player.help_menu, "i": player.inv_list, "a": player.attrib_list, "x": player.search_area, "t": player.check_time}		
+
+		if user_input in inputs:
+			if user_input in ["n", "s", "e", "w"]:
+				inputs[user_input](user_input)  # call the function that matches the key pressed by the user, passing the parameter if it is a direction of travel
+			else:  # otherwise don't pass a parameter
+				inputs[user_input]()
+		if user_input not in inputs:
+			print "Please type 'h' for help."
+		self.narrative(player.get_coords())
 
 
 
@@ -306,45 +276,43 @@ class Character(object):
 	global current_location, world
 
 	def __init__(self, sex, name, hp, stam, mp, gld, inv, coords):
-		self.sex = sex
-		self.name = name
+		self._sex = sex
+		self._name = name
 		self.hp = hp
 		self.stamina = stam
 		self.mp = mp
 		self.gold = gld
 		self.inventory =  inv
 		self.newplayer = True
-		self.max_inv_size = 5
+		self._max_inv_size = 5
 		self.coords = [0,0]
 
 	def __str__(self):
-		return "\nPlayer attributes for " + str(self.name) + ":\nsex: " + str(self.sex) + "\nhit points: " + str(self.hp) + "\nstamina: " + str(self.stamina) + "\nmagic points: " + str(self.mp) + "\ngold: " + str(self.gold) + "\ninventory items: " + str(self.inventory) + "\nNew player? " + str(self.newplayer) + "\nMax # inventory items: " + str(self.max_inv_size) + "\nLocation: " + str(self.coords)
+		return "\nPlayer attributes for " + str(self._name) + ":\nsex: " + str(self._sex) + "\nhit points: " + str(self.hp) + "\nstamina: " + str(self.stamina) + "\nmagic points: " + str(self.mp) + "\ngold: " + str(self.gold) + "\ninventory items: " + str(self.inventory) + "\nNew player? " + str(self.newplayer) + "\nMax # inventory items: " + str(self._max_inv_size) + "\nLocation: " + str(self.get_coords())
 
-	def set_Coords(self, coords):
+	def set_coords(self, coords):
 		""" sets the player's coordinates on the map """
 		self.coords[0] = coords[0]
 		self.coords[1] = coords[1]
 
+	def get_coord(self, element):
+		""" returns the player's specified coordinate on the map """
+		return self.coords[element]
+
+	def get_coords(self):
+		""" returns the player's coordinates on the map """
+		return self.coords
+
 	# methods for movement around the map and user input
-	def move_north(self):
-		"""	add one to the y value, i.e., move north """
-		self.coords[1] += 1
-		Map.check_location_existence(self.coords)
-	
-	def move_east(self):
-		""" add one to the x value, i.e., move east """
-		self.coords[0] += 1
-		Map.check_location_existence(self.coords)
-	
-	def move_south(self):
-		""" subtract one from the y value, i.e., move south """
-		self.coords[1] -= 1
-		Map.check_location_existence(self.coords)
-	
-	def move_west(self):
-		""" subtract one from the x value, i.e., move west """
-		self.coords[0] -= 1
-		Map.check_location_existence(self.coords)
+	#
+	def move(self, direction):
+		# pair all options with an action in a dictionary
+		directions = { "n": [self.get_coord(0),(self.get_coord(1)+1)], "s": [self.get_coord(0),(self.get_coord(1)-1)], "e": [(self.get_coord(0)+1),self.get_coord(1)], "w": [(self.get_coord(0)-1), self.get_coord(1)] }
+		# execute directional movement by updating player's coords
+		if direction in directions:
+			self.set_coords(directions[direction])
+		# check for the existence of the Location to which the player has moved 
+		Map.check_location_existence(self.get_coords())
 
 	def quit_game(self):
 		prRed("Are you sure you want to exit? (y/n)")
@@ -354,8 +322,8 @@ class Character(object):
 		elif choice.lower() in {'n', 'no'}:
 			print "Let's get back to it then."
 
-	def help_menu():
-		prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check # the time\ni check your inventory\na attributes\nq quit\nh help\n")
+	def help_menu(self):
+		prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \nt check the time\ni check your inventory\na attributes\nq quit\nh help\n")
 
 	def inv_list(self):
 		""" Lists all the items in the player's inventory
@@ -363,30 +331,31 @@ class Character(object):
 		print "\nInventory: \n" 
 		prGreen(self.inventory)
 
-	def attrib_list():
+	def attrib_list(self):
 		print self
 
 	def search_area(self):
 		""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk. """
 		# retrieve Location object for current location to check boolean variable for presence of loot at the location
+		global loot_list
+		# cast list representing player's x/y coordinates as a tuple for comparison to loot_list dictionary's keys
+		area = tuple(self.get_coords())
+
 		lp = current_location.loot_present
-		
-		if self.coords == [0,0] and lp == True:
-			print "After searching the area you find a bit of rope useful for tinder and a 	strangely-chilled glass of goat's milk."
-			self.inv_add("tinder")
-			self.inv_add("goat milk")		
-		elif self.coords == [0,1] and lp == True:
-			print "Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old 	campfire."
-			self.inv_add("flint")
-		elif self.coords == [0,2] and lp == True:
-			print "You stumble upon a rusty blade."
-			self.inv_add("rusty blade")
-		else:
-			prYellow("You found nothing useful here.")
-	
-		current_location.loot_present = False
-		return
-	
+
+		# define a dictionary which contains a tuple representing each map location's coordinates, paired with a list containing (1) a print statement description of the area and (2+) any accompanying commands required to add items to the player's inventory
+		loot_list = {(0,0): ["After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk.", "tinder", "goat milk"],
+					 (0,1): ["Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old campfire.", "flint"], 
+					 (0,2): ["You stumble upon a rusty blade.", "rusty blade"],
+					 (-1,0): ["While searching the area, you begin to rifle through the pockets of the two bodies.  On the first, you find a notebook.  The second appears to still be alive so you don't approach him just yet.", "notebook"]}
+
+		if lp == True:	# if loot is present in the area
+			if area in loot_list:  # if the area has items contained in the loot list (redundant)
+				print loot_list[area][0]	# print the first element of the value list
+				for i in range(1, len(loot_list[area])):
+					self.inv_add(loot_list[area][i])	# execute the command(s) contained in the second element of the value list, adding said items to player's inventory
+			else:
+				prYellow("You found nothing useful here.")	
 	
 	def inv_add(self, item):
 		""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full. """
@@ -417,24 +386,14 @@ class Character(object):
 		return
 
 	def inv_remove(self, item):
-		""" Removes an item from the player's inventory.  Called from inv_prmpt_remove() function
-		"""
+		""" Removes an item from the player's inventory (and adds it to the location).  Called from inv_prmpt_remove() function """
+		## TO-DO: pop item instead, adding it to the list of items in the current Location object
 		self.inventory.remove(item)
-	
 
-
-	def keydown(self, user_input):
-		""" Handles user input """
-
-		# dictionary of possible user inputs with matching names of methods to call for each
-		inputs = {"n": self.move_north, "s": self.move_south, "e": self.move_east, "w": self.move_west, "q": self.quit_game, "h": self.help_menu, "i": self.inv_list, "a": self.attrib_list, "x": self.search_area}		
-
-		if user_input in inputs:
-			inputs[user_input]()  # call the function that matches the key pressed by the user
-		if user_input not in inputs:
-			print "Please type 'h' for help."
-		Map.narrative()
-
+	def check_time(self):
+		""" handles keeping track of in-game time, which is planned to affect interactions in the game """
+		pass
+		
 	def die(self):
 		"""	this function ends the program """
 		message = prRed("\nGame Over.\n")
