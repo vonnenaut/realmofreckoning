@@ -273,7 +273,7 @@ class Location(object):
 		if self.bool_monsters_present is True:
 			self.mtaq_list = monster_types_and_quantities
 			# TEST:
-			print self.mtaq_list[0][1]
+			# print self.mtaq_list[0][1]
 
 			for x in range(len(self.mtaq_list)-1):
 				range_shy = self.mtaq_list[x][1]
@@ -303,6 +303,9 @@ class Location(object):
 
 	def get_y(self):
 		return self.y
+
+	def get_bool_monsters_present(self):
+		return self.bool_monsters_present
 
 
 class Character(object):
@@ -461,6 +464,7 @@ class Character(object):
 	def attack(self):
 		""" TO-DO:  add a parameter called initiative which is a to_hit and hp_value modifier based on whether the target sees the attacker coming or is taken off-guard """
 		area = self.get_location()
+		print area
 
 		if area.bool_monsters_present is False:
 			print "While we applaud your fervor, there's nothing to attack here."
@@ -470,7 +474,7 @@ class Character(object):
 			target_name = area.mtaq_list[0][0]
 
 			# retrieve instance object with given target_name
-			target_object = Map.get_location(self.get_location)
+			target_object = Map.get_location(player.get_location)
 
 			print "Attacking target: " + target_name
 
