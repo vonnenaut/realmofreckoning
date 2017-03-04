@@ -25,7 +25,7 @@
 #
 # sys is for exiting the program
 # vtemu is a VT100 emulator for Windows which colorizes text
-import sys, vtemu, time
+import sys, vtemu, time, random
 
 
 # Global variables
@@ -40,7 +40,7 @@ go = 'nowhere'
 
 #tells the program whether to display the new player narrative introducing the game and the start scene
 # TO-DO:  Get rid of this.  Create an Intro class to print the opening narrative text once and call it at the beginning before the first call to narrative()
-newplayer = True
+_newplayer = True
 
 inventory = []  # a list to keep track of items in player's inventory
 
@@ -90,13 +90,15 @@ class Map(object):
 
 		self.locations = locations
 		# create player instance of character class
-		self.create_Char()
+		self.create_char()
 		# create starting location on world map
-		starting_l = Location([0,0], False, True)
+		# TO-DO:  need to instantiate each of the spiders while creating the location
+		_starting_l = Location([0,0], True, True, [['spider',2], ['ant',1]])
+		print _starting_l
 		# this line starts the loop which gets user input for interacting with the environment
 		self.narrative(player.get_coords())
 
-	def create_Char(self):
+	def create_char(self):
 		global player
 		""" prompts user to answer questions in order to create their character """
 		# 
@@ -110,18 +112,23 @@ class Map(object):
 		# print "2.  What is your character's name?"
 		# name = raw_input("?")
 		# 
-		# player = Character(sex, name, 10, 5, 3, 0, [], [0,0])
+		# print "3. Pick your class:\n(1) Warrior\n(2) Mage\n(3) Rogue"
+		# class = raw_input("?")
+		# player = Character(sex, name, class, 10, 5, 3, 0, [], [0,0])
 		# print "Ok, here's some information about your character: ", player
-		player = Character("male", "Drizzt", 10, 5, 3, 0, [], [0,0])
+		# self, ch_type, gender, name, p_class, copper, inv, coords
+		player = Player('Player', 'male', 'Dexter', 'Thief', 0, [], [0,0])
 
 	@classmethod
-	def add_location(cls, coords, mon, loot):
+	def add_location(cls, coords, mon, loot, **monster_types_and_quantities):
 		""" adds a location to the map """
-		l = Location(coords, mon, loot)
+		# self, current_location_coords, bool_monsters_present, loot_present, monster_types_and_quantities
+		l = Location(coords, mon, loot, monster_types_and_quantities)
 		locations[l.name] = l
 
 	@classmethod
 	def coords_to_name(cls, coords):
+		""" creates a name to be used as a key for looking up instances of Location in locations """
 		name = str(coords[0]) + str(coords[1])
 		return name
 
@@ -165,18 +172,18 @@ class Map(object):
 					  (0,1): ["\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which has crumbled with time.  \nThere is nothing here but ruin.  As you approach an outcrop of rock, you realize there is a narrow passage leading down into the ground, perhaps an old cellar entrance.  Do you enter? (y/n)", self.encounter],
 					  (0,2): ["\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."]}
 
-		if player.newplayer == True:
+		if player._newplayer == True:
 			print "\n     You awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  To your \nnorth in the distance is a fortress.  To your east is a \nforest and to your south is a riverbank with \aa boat tied at a pier.  \n\nWhich direction do you go? (Press 'h' for help)"
-			player.newplayer = False
+			player._newplayer = False
 
 		elif key in narratives:
 			print narratives[key][0]
-			if len(narratives[key]) > 1:  # if there are commands associated with this area, execute them
+			if len(narratives[key]) > 1:  # if there are events associated with this area, execute them
 				for i in range(1,len(narratives[key])):
 					temp_list = area[:]
 					temp_list.append(i)
-					choice_key = tuple(temp_list)
-					narratives[key][i](choice_key)
+					ch_key = temp_list
+					narratives[key][i](ch_key)
 
  		else:
 			prRed("Under construction.  Returning to the beginning.")
@@ -193,7 +200,6 @@ class Map(object):
 	def next_choice(self, choice_key):
 		""" increments choice_key's 3rd number to proceed a deeper level in the branching choices for any location """
 		# cast choice_key back as a list so that it can be modified.  I'm pretty sure others would frown on this approach but it works and I have no idea of how else to create this functionality
-		choice_key = list(choice_key)
 		choice_key[2] += 1
 		self.encounter(choice_key)
 
@@ -204,33 +210,33 @@ class Map(object):
 		input = raw_input(prompt).lower()
 
 		# cast choice_key as a tuple so it can be used as a dictionary key
-		choice_key = tuple(choice_key)
+		t_choice_key = tuple(choice_key)
 
-		outcomes = { (-1,0,1): 
-								{'y': ["\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades slowly.", player.die], 'n': ["\nWell, daylight's a-wasting.  Where to now?"]}, 
-					 (0,1,1):
-					 			{'y': ["\nYou steal yourself and proceed down the cracked and disintegrating steps only to find a locked wooden door.  Do you attempt to force the lock? (y/n)", self.next_choice], 'n': ["\nWhere to now?"]},
+		outcomes = { (-1,0,1): {'y': ["\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades slowly.", player.die], 'n': ["\nWell, daylight's a-wasting.  Where to now?"]}, 
+					 (0,1,1):	{'y': ["\nYou steel yourself and proceed down the cracked and disintegrating steps only to find a locked wooden door.  Do you attempt to force the lock? (y/n)", self.next_choice], 'n': ["\nWhere to now?"]},
 					 (0,1,2):   {'y': ["\nYou put all your force into it as you drive your shoulder into the door.  It gives way in a sudden explosion of splinters, dust and debris.  It's too dark to proceed safely without a lantern."], 'n': ["\nWhere to now?"]} }
-		if choice_key in outcomes:
-			print outcomes[choice_key][input][0]
-			if len(outcomes[choice_key][input]) > 1:
-				for i in range (1,len(outcomes[choice_key][input])):
-					if outcomes[choice_key][input][i] == self.next_choice:
-						self.next_choice(choice_key)
+
+		if t_choice_key in outcomes and input in ['y', 'yes', 'n', 'no']:
+			print outcomes[t_choice_key][input][0]
+			if len(outcomes[t_choice_key][input]) > 1:
+				for i in range (1,len(outcomes[t_choice_key][input])):
+					if outcomes[t_choice_key][input][i] == self.next_choice:
+						outcomes[t_choice_key][input][i](choice_key)
 					else:
-						outcomes[choice_key][input][i]()
+						outcomes[t_choice_key][input][i]()
 		else:
 			# for k in outcomes[choice_key]:
 				# print "Please type "
 				# for i in outcomes[choice_key]:
 					# print "",outcomes[choice_key].key()
-			pass
+			print "Please type 'y(es)'' or 'n(o)'."
+			self.encounter(choice_key)
 
 	def keydown(self, user_input):
 		""" Handles user input """
 
 		# dictionary of possible user inputs with matching names of methods to call for each
-		inputs = {"n": player.move, "s": player.move, "e": player.move, "w": player.move, "q": player.quit_game, "h": player.help_menu, "i": player.inv_list, "a": player.attrib_list, "x": player.search_area, "t": player.check_time}		
+		inputs = {"n": player.move, "s": player.move, "e": player.move, "w": player.move, "q": player.quit_game, "h": player.help_menu, "i": player.inv_list, "a": player.attack, "c": player.attrib_list, "x": player.search_area, "t": player.check_time}	
 
 		if user_input in inputs:
 			if user_input in ["n", "s", "e", "w"]:
@@ -242,25 +248,43 @@ class Map(object):
 		self.narrative(player.get_coords())
 
 
-
 class Location(object):
 	""" This class defines all of the attributes to be stored for each location object
 		initializes attributes for:
 		location 			point containing x and y coordinates
 		name 				used to create the key for the dictionary storing each object
-		monsters_present 	tracks whether monsters are in the present location
+		bool_monsters_present 	tracks whether monsters are in the present location
+		monster_types_and_quantities  a list of lists in the form: [[string, num], [string, num]], representing the types and quantities of each type of monster present in a map location.  Only assigned if bool_monsters_present is True.
 		loot_present 		keeps track of whether loot is in the present location 
 							(either having been dropped or spawned initially) """	
-	def __init__(self, current_location_coords, monsters_present, loot_present):
+	def __init__(self, current_location_coords, bool_monsters_present, loot_present, monster_types_and_quantities):
 		global current_location, locations, x, y, loot
 
 		self.coords = current_location_coords
 		self.x = current_location_coords[0]
 		self.y = current_location_coords[1]		
-		self.monsters_present = monsters_present		
+		self.bool_monsters_present = bool_monsters_present		
 		self.loot_present = loot_present
 		self.name = str(self.x) + str(self.y)	
+		self.monsters_at_location = []
 		current_location = self
+		locations[self.name] = self
+
+		if self.bool_monsters_present is True:
+			self.mtaq_list = monster_types_and_quantities
+			# TEST:
+			print self.mtaq_list[0][1]
+
+			for x in range(len(self.mtaq_list)-1):
+				range_shy = self.mtaq_list[x][1]
+				print range_shy
+				for quantity in range(1, (range_shy)):
+					print self.mtaq_list[x][quantity]
+					mon_name = self.mtaq_list[x][0] + str(quantity)
+					mon_name = NPC(self.mtaq_list[x][0])
+					self.monsters_at_location.append(mon_name)
+			print self.monsters_at_location
+
 		# check for existence of loot entry in dictionary before assigning loot listed there to this instance's loot list
 		if self.name in loot:
 			self.loot = loot[self.name]
@@ -268,7 +292,7 @@ class Location(object):
 			self.loot = []
 
 	def __str__(self):
-		return "Current player location " + str(self.name) + " is at " + str(self.coords) + ", monsters present? " + str(self.monsters_present) + " Loot present? " + str(self.loot_present)
+		return "Current player location " + str(self.name) + " is at " + str(self.coords) + "\nMonsters present? " + str(self.bool_monsters_present) + "\nLocation contains the following monsters: " + str(self.mtaq_list) + "\nLoot present? " + str(self.loot_present)
 
 	def get_coords(self):
 		""" returns a list coordinate pair denoting location's position on map """
@@ -279,32 +303,41 @@ class Location(object):
 
 	def get_y(self):
 		return self.y
-	
-	def return_name(self):
-		"""
-			Return a unique string made up of the x and y coordinates to be used for naming each Location object as it is created and for retrieval from the dictionary of Location objects.
-		"""
-		return str(self.x) + str(self.y)
 
 
 class Character(object):
 	""" Represents the player with methods for inventory management, searching areas, generating narrative, moving and dying. """
-	global current_location, world
+	# dictionary of Character stats as: 'type': ['class name', hitpoints, stamina, magicpoints, copper, [inv], [location]]
+	global ch_types
 
-	def __init__(self, sex, name, hp, stam, mp, gld, inv, coords):
-		self._sex = sex
-		self._name = name
-		self.hp = hp
-		self.stamina = stam
-		self.mp = mp
-		self.gold = gld
-		self.inventory =  inv
-		self.newplayer = True
+	ch_types = {'Player': ['Player', 10, 10, 10, 0, [], [0,0]],
+			 'spider': ['NPC', 3, None, None, 0, ['poison sac'], []],
+			 'ant': ['NPC', 1, None, None, 0, [], []],
+			 'bear': ['NPC', 15, None, None, 0, ['bear pelt'], []]}
+
+	def __init__(self, ch_type):
+		self.ch_type = ch_type # will be either 'player' or 'NPC'
+		self.stats_setup(ch_type)
 		self._max_inv_size = 5
 		self.coords = [0,0]
 
+	def stats_setup(self, ch_type):
+		global ch_types
+
+		if self.ch_type in ch_types:
+			self.hp = ch_types[self.ch_type][1]
+			self.max_hp = self.hp
+			self.stamina = ch_types[self.ch_type][2]
+			self.max_stam = self.stamina
+			self.mp = ch_types[self.ch_type][3]
+			self.max_mp = self.mp
+			self.copper = ch_types[self.ch_type][4]
+			self._newplayer = True
+		else:
+			print "ERROR:  Attempting to create unknown NPC Character type."
+
 	def __str__(self):
-		return "\nPlayer attributes for " + str(self._name) + ":\nsex: " + str(self._sex) + "\nhit points: " + str(self.hp) + "\nstamina: " + str(self.stamina) + "\nmagic points: " + str(self.mp) + "\ngold: " + str(self.gold) + "\ninventory items: " + str(self.inventory) + "\nNew player? " + str(self.newplayer) + "\nMax # inventory items: " + str(self._max_inv_size) + "\nLocation: " + str(self.get_coords())
+		return "\nAttributes for " + str(self.ch_type) +":" + "\nName: " + self.name + "\nhit points: " + str(self.hp) + "/" + str(self.max_hp) + "\nstamina: " + str(self.stamina) + "/" + str(self.max_stam) + "\nmagic points: " + str(self.mp) + "/" + str(self.max_mp) + "\ncopper: " + str(self.copper) + "\ninventory items: " + str(self.inventory) + "\nLocation: " + str(self.get_coords())
 
 	def set_coords(self, coords):
 		""" sets the player's coordinates on the map """
@@ -318,6 +351,16 @@ class Character(object):
 	def get_coords(self):
 		""" returns the player's coordinates on the map """
 		return self.coords
+
+	def get_location(self):
+		global locations
+
+		location_key = Map.coords_to_name(self.get_coords())
+		if location_key in locations:
+			location = locations[location_key]
+			return location
+		else:
+			print location_key + " not found."
 
 	# methods for movement around the map and user input
 	#
@@ -348,28 +391,33 @@ class Character(object):
 		prGreen(self.inventory)
 
 	def attrib_list(self):
+		# if self is 'Player':
+			# self.get_player_stats()
+		# else:
 		print self
 
 	def search_area(self):
 		""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk. """
 		# retrieve Location object for current location to check boolean variable for presence of loot at the location
-		global loot_list
+		global loot_list, current_location
 		# cast list representing player's x/y coordinates as a tuple for comparison to loot_list dictionary's keys
 		area = tuple(self.get_coords())
 
 		lp = current_location.loot_present
 
 		# define a dictionary which contains a tuple representing each map location's coordinates, paired with a list containing (1) a print statement description of the area and (2+) any accompanying commands required to add items to the player's inventory
-		loot_list = {(0,0): ["After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk.", "tinder", "goat milk"],
+		loot_dict = {(0,0): ["After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk.", "tinder", "goat milk"],
 					 (0,1): ["Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old campfire.", "flint"], 
 					 (0,2): ["You stumble upon a rusty blade.", "rusty blade"],
 					 (-1,0): ["While searching the area, you begin to rifle through the pockets of the two bodies.  On the first, you find a notebook.  The second appears to still be alive so you don't approach him just yet.", "notebook"]}
 
-		if lp == True:	# if loot is present in the area
-			if area in loot_list:  # if the area has items contained in the loot list (redundant)
-				print loot_list[area][0]	# print the first element of the value list
-				for i in range(1, len(loot_list[area])):
-					self.inv_add(loot_list[area][i])	# execute the command(s) contained in the second element of the value list, adding said items to player's inventory
+		if area in loot_dict:  # if the area has items contained in the loot list 
+			if current_location.loot_present is True:
+				print loot_dict[area][0]	# print the first element of the value list
+				for i in range(1, len(loot_dict[area])):
+					self.inv_add(loot_dict[area][i])	# execute the command(s) contained in the second element of the value list, adding said items to player's inventory
+					# remove the items from the ground
+				current_location.loot_present = False
 			else:
 				prYellow("You found nothing useful here.")	
 	
@@ -410,11 +458,85 @@ class Character(object):
 		""" handles keeping track of in-game time, which is planned to affect interactions in the game """
 		pass
 
-	def die(self):
-		"""	this function ends the program """
-		message = prRed("\nGame Over.\n")
-		sys.exit(message)
+	def attack(self):
+		""" TO-DO:  add a parameter called initiative which is a to_hit and hp_value modifier based on whether the target sees the attacker coming or is taken off-guard """
+		area = self.get_location()
 
+		if area.bool_monsters_present is False:
+			print "While we applaud your fervor, there's nothing to attack here."
+			return
+		else:
+			# target of attack becomes first monster retrieved from monster_types_and_quantities list
+			target_name = area.mtaq_list[0][0]
+
+			# retrieve instance object with given target_name
+			target_object = Map.get_location(self.get_location)
+
+			print "Attacking target: " + target_name
+
+		ra = self.roll_attack()
+
+		print "You attack the " + target_name
+		
+		if ra[0] >= 5:
+			prGreen("You hit the " + target + "for" + str(ra[1]) + "hp.")
+			target.sub_hp(ra[1])
+		if target.is_alive:
+			print target.ch_type + "retaliates."
+			self.roll_attack()
+			if ra[0] >= 5:
+				prRed(target.ch_type + "hits you for" + str(ra[1]) + "hp.")
+			else:
+				prRed(target.ch_type + "misses!")
+
+	def roll_attack(self):
+		""" a helper method for attack() method, returns a list of two elements:  [to_hit, hp_value] """
+		to_hit = random.randint(0,9)
+		hp_value = random.randint(0,3)
+
+		return [to_hit, hp_value]
+
+	def sub_hp(self, amt):
+		self.hp -= amt
+		if self.hp <= 0:
+			self.die()
+			target_is_alive = False 
+
+	def add_hp(self,amt):
+		self.hp += amt
+		if self.hp > self.max_hp:
+			self.hp = self.max_hp
+
+	def die(self):
+		"""	this function kills characters (player or NPC) """
+		if self.ch_type is 'Player':
+			message = prRed("\nGame Over.\n")
+			sys.exit(message)
+		else:
+			message = "You have defeated the " + self.ch_type + "."
+
+class Player(Character):
+	def __init__(self, ch_type, gender, name, p_class, copper, inv, coords):
+		super(Player, self).__init__(ch_type)
+	 	self._gender = gender
+	 	self.name = name
+	 	self.p_class = p_class
+	 	self.copper = copper
+	 	self.inventory = inv
+	 	self.coords = coords
+	 	self._newplayer = True
+
+	def get_player_stats(self):
+		return "\n" + self.ch_type + " attributes for " + str(self.name) + "\ngender: " + str(self._gender) + "\nhit points: " + str(self.hp) + "/" + str(self.max_hp) + "\nstamina: " + str(self.stamina) + "/" + str(self.max_stam) + "\nmagic points: " + str(self.mp) + "/" + str(self.max_mp) + "\ncopper: " + str(self.copper) + "\ninventory items: " + str(self.inventory) + "\nNew player? " + str(self._newplayer) + "\nMax # inventory items: " + str(self._max_inv_size) + "\nLocation: " + str(self.get_coords())
+
+class NPC(Character):
+	def __init__(self, ch_type):
+		super(NPC, self).__init__(ch_type)
+		self.stats_setup(ch_type)
+
+	def npc_stats():
+		return "\n" + self.ch_type + " attributes: " + "\nhit points: " + str(self.hp) + "/" + str(self.max_hp) + "\nstamina: " + str(self.stamina) + "/" + str(self.max_stam) + "\nmagic points: " + str(self.mp) + "/" + str(self.max_mp) + "\ncopper: " + str(self.copper) + "\ninventory items: " + str(self.inventory) + "\nMax # inventory items: " + str(self._max_inv_size) + "\nLocation: " + str(self.get_coords())
+		
 
 # Game Loop
 ##
