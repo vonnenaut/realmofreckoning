@@ -298,6 +298,3 @@ class Realm(object):
 		else:
 			print "Please type 'h' for help."
 		self.narrative(self.player.get_coords())
-
-
-world = Realm()
