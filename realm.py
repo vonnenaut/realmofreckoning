@@ -248,6 +248,27 @@ class Realm(object):
 			else:
 				print "Dropped %s on the ground." % (item)
 
+	def inv_prmpt_remove(self):
+		""" Prompts player to pick an item to remove from the inventory	"""
+		print "\nWhich item do you wish to remove?\n"
+		prGreen(self.player.inventory)
+		print "\n"
+
+		choice = raw_input(self.PROMPT)
+
+		if choice in self.player.get_inventory():
+			self.inv_remove(choice)
+			prGreen("%s dropped on the ground." % (choice))
+		else:
+			print "Item: %s not found.  Please type the name of the item you wish to remove." % (choice)
+			choice = raw_input(self.PROMPT)
+		return
+
+	def inv_remove(self, item):
+		""" Removes an item from the player's inventory (and adds it to the location).  Called from inv_prmpt_remove() function """
+		## TO-DO: pop item instead, adding it to the list of items in the current Location object
+		self.player.inventory.remove(item)
+
 	def search_area(self):
 		""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk. """
 		# cast list representing player's x/y coordinates as a tuple for comparison to LOOT_LIST dictionary's keys
