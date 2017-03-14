@@ -37,6 +37,14 @@ class Character(object):
 	def get_inventory(self):
 		return self.inventory
 
+	def add_to_inventory(self, item):
+		""" adds an item to player's inventory if inventory isn't yet full; otherwise returns a boolean indicating success (True) or failure (False) """
+		if len(self.inventory) < self._max_inv_size:
+			self.get_inventory().append(item)
+			return True
+		else:
+			return False
+
 	def teleport(self, coords):
 		""" move character to the specified coordinates.  NOTE:  need to update associated location in Realm module (to avoid circular imports) """
 		self.coords = coords
