@@ -35,7 +35,7 @@ class Realm(object):
 	##
 
 	# define a dictionary which contains a tuple representing each Realm location's coordinates, paired with a list containing (1) a print statement description of the area and (2+) any accompanying commands required to add items to the player's inventory
-	LOOT_LIST = {(0,0): ["After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk.", "tinder", "goat milk"],
+	LOOT_LIST = {(0,0): ["After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk.", "tinder", "tinder", "goat milk", "goat milk"],
 			 	 (0,1): ["Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old campfire.", "flint"], 
 			 	 (0,2): ["You stumble upon a rusty blade.", "rusty blade"],
 			 	 (-1,0): ["While searching the area, you begin to rifle through the pockets of the two bodies.  On the first, you find a notebook.  The second appears to still be alive so you don't approach him just yet.", "notebook"]
@@ -279,7 +279,9 @@ class Realm(object):
 	def inv_remove(self, item):
 		""" Removes an item from the player's inventory (and adds it to the location).  Called from inv_prmpt_remove() function """
 		## TO-DO: pop item instead, adding it to the list of items in the current Location object
-		self.player.inventory.remove(item)
+		inventory = self.player.get_inventory()
+		dropped_item = inventory.pop(inventory.index(item))
+		self.current_player_location.add_loot(dropped_item)
 
 	def search_area(self):
 		""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk. """
