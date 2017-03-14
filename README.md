@@ -9,19 +9,17 @@
 #===================================================================
 # Known Bugs:
 #--------------------------------------------------------------------
-#
+# See Issues: https://github.com/vonnenaut/realmofreckoning/issues
 
 #
 #====================================================================
 # Fixed Bugs:
 #--------------------------------------------------------------------
-# 
+# See Issues: https://github.com/vonnenaut/realmofreckoning/issues
 #
 #====================================================================
 # To-Do/Ideas:
 #-------------------------------------------------------------------
-# -- Implement a more readable, concise way to handle logic, replacing if-else with dictionaries (I think ... ?) --  See Coursera Fundamentals of Computing 2of7, wk 7b Programming Tips (02:30)
-# --Consider ways to reduce or eliminate all global variables (encapsulate into classes?)
 # --Add more text narrative of areas to explore
 # --add item persistence on the ground when items are dropped
 # --Implement item usage (health potion, equipping weapons, etc.)
@@ -62,6 +60,7 @@
 # Update 2/17/17:  I moved the methods for adding, retrieving and checking the existence of Locations into the Map class from the Location class since it just makes more sense logically.  I also moved the narrative method from the Character class into the Map class.
 #
 # Update 2/18/17:  I rewrote both the move and search_area methods to simplify moving around the map and adding new content to new areas of the map by switching from if-else statements to dictionaries.  I also rewrote 'move', renaming it 'keydown' and simplifying its code similarly using a dictionary in place of if-else statements.  I am definitely now a fan of dictionaries and learned this usage from Coursera's Fundamentals of Computing (2of7).
+# Update 3/7/17:  I am in the process of separating the program into modules named as follows: main.py (file to run in order to start the program), realm.py, location.py and character.py
 #
 """
 VT100/ANSI Escape sequence reference chart:
