@@ -83,6 +83,10 @@ class Realm(object):
 	def get__master_monster_list(self):
 		return self.MONSTER_LIST
 
+	def add_to_locations(self, location):
+		""" adds a new Location instance to a dictionary of Location instances """
+		self.get_locations_dict()[location.name] = location
+
 	def narrative(self, area):
 		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
 
@@ -90,11 +94,12 @@ class Realm(object):
 
 		narratives = {(0,0): ["\n     You are standing in the same field in which you first awoke\nwithout any memory of how you got here.  Which way?\n"],
 				  	 (-1,0): ["\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\nlife.  Do you approach the bodies? (y/n)", self.encounter],
-				  	 (0,1): ["\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which has crumbled with time.  \nThere is nothing here but ruin.  As you approach an outcrop of rock, you realize there is a narrow passage leading down into the ground, perhaps an old cellar entrance.  Do you enter? (y/n)", self.encounter],
+				  	 (0,1): ["\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which has crumbled with time.  \nThere is nothing here but ruin.  As you approach an outcrop \nof rock, you realize there is a narrow passage leading down \ninto the ground, perhaps an old cellar entrance.  \nDo you enter? (y/n)", self.encounter],
 				  	 (0,2): ["\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."]}
 
 		if self.player.newplayer == True:
-			print "\n     You awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot\n in an open field.  You look west toward the direction of\n the distant sounds and hear that it is now quiet.  To your \nnorth in the distance is a fortress.  To your east is a \nforest and to your south is a riverbank with \aa boat tied at a pier.  \n\nWhich direction do you 	go? (Press 'h' for help)"
+			prCyan("\nWelcome to Realm of Reckoning!")
+			print"\nYou awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot in \nan open field and realize that you carry nothing useful to \nhelp you survive should you run into trouble.  You look west \ntoward the direction of the distant sounds and hear that it \nis now quiet.  To your north in the distance is a fortress.  \nTo your east is a forest and to your south is a riverbank \nwith a boat tied at an old pier.  \n\nWhich direction do you go? (Press 'h' for help)"
 			self.player.newplayer = False
 
 		elif key in narratives:
@@ -141,15 +146,15 @@ class Realm(object):
 								{'y': ["\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades slowly.", self.die], 
 								 'n': ["\nWell, daylight's a-wasting.  Where to now?"]}, 
 					 (0,1,1):
-					 			{'y': ["\nYou steal yourself and proceed down the cracked and disintegrating steps only to find a locked wooden door.  Do you attempt to force the lock? (y/n)", self.next_choice],
+					 			{'y': ["\nYou steal yourself and proceed down the cracked and \ndisintegrating steps only to find a locked wooden door.  \n\nDo you attempt to force the lock? (y/n)", self.next_choice],
 					 			 'n': ["\nWhere to now?"]},
 					 (0,1,2): 
-					 			{'y': ["\nYou put all your force into it as you drive your shoulder into the door.  It gives way in a sudden explosion of splinters, dust and debris.  It's too dark to proceed safely without a lantern."], 
+					 			{'y': ["\nYou put all your force into it as you drive your shoulder \ninto the door.  The door gives way in a sudden explosion \nof dust and splinters.  \n\nIt's too dark to proceed safely without a lantern and so \nyou return through the broken doorway and back up the stairs \nto the crumbling remains of the fortress above."], 
 					             'n': ["\nWhere to now?"]},
-			   (999,999,999):   {"\nPlease press 'h' for help."}
+			   (999,999,999):   {"Command not recognized.  Please type 'h' for help."}
 			   		}
 
-		if choice_key in outcomes:
+		if choice_key in outcomes and input in outcomes[choice_key]:
 			print outcomes[choice_key][input][0]
 			if len(outcomes[choice_key][input]) > 1:
 				for index in range(1,len(outcomes[choice_key][input])): 
@@ -158,7 +163,7 @@ class Realm(object):
 					else:
 						outcomes[choice_key][input][index]()
 		else:
-			print "Please type 'h' for help."
+			prRed("Command not recognized.  Please type 'h' for help.")
 
 	def add_location(self, coords):
 		""" adds a location to the Realm """
@@ -166,6 +171,7 @@ class Realm(object):
 		# location_name = self.get_location_name(coords)
 		key = tuple(coords)
 
+		# check for existence of loot to add to this location per LOOT_LIST
 		if key in self.LOOT_LIST:
 			loot = self.LOOT_LIST[key]
 			loot_present = True
@@ -173,6 +179,7 @@ class Realm(object):
 			loot = []
 			loot_present = False
 
+		# check for existence of monsters to add to this location per MONSTER_LIST
 		if key in self.MONSTER_LIST:
 			monster_list = self.get__master_monster_list()
 			monsters = monster_list[key]
@@ -183,8 +190,8 @@ class Realm(object):
 		
 		# create new instance of Location and add it to the list of instances, then set it to the player's current location
 		new_location = Location(coords, monsters_present, loot_present, monsters, loot)
-		self.locations[new_location.name] = new_location
-		self.current_player_location = self.locations[new_location.name]
+		self.add_to_locations(new_location)
+		self.current_player_location = new_location
 
 	def get_locations_dict(self):
 		return self.locations
@@ -204,10 +211,11 @@ class Realm(object):
 		return name
 
 	def get_location(self, current_location_coords):
-		""" attempts to return an object with a name based on the current location coordinates 	if the object name doesn't exist, throws NameError exception """
+		""" attempts to return an object with a name based on the current location coordinates if the object name doesn't exist, throws NameError exception """
 		try:
 			string = self.get_location_name(current_location_coords)
-			return self.locations[string]
+			# return self.locations[string]
+			return self.get_locations_dict()[string]
 		except NameError:
 			print "Location does not exist."
 
@@ -231,7 +239,7 @@ class Realm(object):
 		self.narrative(self.player.get_coords())
 
 	def help_menu(self):
-		prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \ni check your inventory\na attributes\nq quit\nh help\n")
+		prCyan("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \ni check your inventory\na attributes\nq quit\nh help\n")
 
 	def inv_list(self):
 		""" Lists all the items in the player's inventory
@@ -241,8 +249,7 @@ class Realm(object):
 
 	def inv_add(self, item):
 		""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full. """
-		if len(self.player.inventory) < 5:
-			self.player.inventory.append(item)
+		if self.player.add_to_inventory(item):
 			prGreen("\n %s added to inventory." % (item))
 		else:
 			print "Inventory full.  Drop an item? (y/n)"
@@ -277,14 +284,18 @@ class Realm(object):
 	def search_area(self):
 		""" Searches area upon player pressing 'x' to find and collect loot.  You really should try the goat's milk. """
 		# cast list representing player's x/y coordinates as a tuple for comparison to LOOT_LIST dictionary's keys
-		area = tuple(self.player.get_coords())
-
+		coords = tuple(self.player.get_coords())
 		loot_present = self.current_player_location.get_loot_present()
+		removal_list = []
 
 		if loot_present:	# if loot is present in the area
-			if area in self.LOOT_LIST:  # if the area has items contained in the loot list (redundant)
-				for i in range(1, len(self.LOOT_LIST[area])):
-					self.inv_add(self.LOOT_LIST[area][i])	# execute the command(s) contained in the second element of the value list, adding said items to player's inventory
+			if coords in self.LOOT_LIST:  # if the area has items contained in the loot list
+				# copy_of_LOOT_LIST = self.LOOT_LIST[coords]
+				for i in range(1, len(self.LOOT_LIST[coords])):
+					self.inv_add(self.LOOT_LIST[coords][i])	# execute the command(s) contained in the second element of the value list, adding said items to player's inventory
+					removal_list.append(self.LOOT_LIST[coords][i])
+				self.current_player_location.remove_loot(removal_list)  # removes item from the location
+					
 		else:
 			prYellow("You found nothing useful here.")
 
@@ -322,5 +333,5 @@ class Realm(object):
 			else:  # otherwise don't pass a parameter
 				inputs[user_input]()
 		else:
-			print "Please type 'h' for help."
+			prRed("Command not recognized.  Please type 'h' for help.")
 		self.narrative(self.player.get_coords())
