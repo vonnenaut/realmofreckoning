@@ -2,7 +2,7 @@
 # A Text-based adventure game
 # by
 # Daniel Ashcom
-# GNU GPL v 3.0 but I want my free beer.
+# GNU GPL v 3.0
 #  ==========  End documentation  ==========
 ###
 
