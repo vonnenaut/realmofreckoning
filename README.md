@@ -9,19 +9,17 @@
 #===================================================================
 # Known Bugs:
 #--------------------------------------------------------------------
-#
+# See Issues: https://github.com/vonnenaut/realmofreckoning/issues
 
 #
 #====================================================================
 # Fixed Bugs:
 #--------------------------------------------------------------------
-# 
+# See Issues: https://github.com/vonnenaut/realmofreckoning/issues
 #
 #====================================================================
 # To-Do/Ideas:
 #-------------------------------------------------------------------
-# -- Implement a more readable, concise way to handle logic, replacing if-else with dictionaries (I think ... ?) --  See Coursera Fundamentals of Computing 2of7, wk 7b Programming Tips (02:30)
-# --Consider ways to reduce or eliminate all global variables (encapsulate into classes?)
 # --Add more text narrative of areas to explore
 # --add item persistence on the ground when items are dropped
 # --Implement item usage (health potion, equipping weapons, etc.)
