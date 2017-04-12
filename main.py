@@ -8,11 +8,8 @@
 
 # imports
 ##
-# sys is for exiting the program
-# vtemu is a VT100 emulator for Windows which colorizes text
 from realm import Realm
 
-# Game Loop
+# start game loop
 ##
-# this line sets up the Realm and its first location, the player's starting point
 world = Realm()
