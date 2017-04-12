@@ -55,7 +55,27 @@ Update 2/17/17:  I moved the methods for adding, retrieving and checking the exi
  
 Update 3/7/17:  I am in the process of separating the program into modules named as follows: main.py (file to run in order to start the program), realm.py, location.py and character.py
 
-Update 3/?/17:  The separation of the program into separate modules was completed.
+Update 3/13/17:  The separation of the program into separate modules was completed.  I ran into some unanticipated problems, including circular imports, which took a bit of rethinking and rearranging of methods to resolve.  
+The initial plan:
+(1) init.py -- handles imports
+(2) requirements.txt -- will contain any needed dependencies (at this time, noted as: sys, vtemu, time)
+(3) test_sample.py -- test suite
+(4) map.py -- the main game class; handles character, NPC and Location creation and retrieval; handles choice selection and handling, narrative, encounters (incl. battles) NOTE: should consider splitting off some of this functionality into separate modules/files incl. narrative.py, choice.py, encounter.py, create_char.py
+(5) character.py -- represents both the player and any NPCs in the game
+(6) location.py -- represents map locations
+(7) main.py -- starts the whole thing off
+
+The actual implementation:
+(1) main.py -- starts the whole thing off, imports realm.py
+(2) realm.py -- handles the brunt of game logic, imports character.py and location.py (called 'map.py' above)
+(3) character.py -- represents both the player and any NPCs in the game
+(4) location.py -- represents map locations
+
+As I am learning code testing through my Coursera class (Principles of Computing 1), I will begin to implement (better) formal testing into my development process.  This will save time and headaches and so I will create a test suite (test_suite.py) for such a purpose.
+
+Additionally, I intend to try to implement the Monte Carlo method somehow into this game.  My first idea is to create a companion NPC with AI-like features, but maybe there can instead be an in-game mini-game which uses the Monte Carlo method to play a simple game against the player.
+
+
 
 """
 VT100/ANSI Escape sequence reference chart:
@@ -87,5 +107,6 @@ VT100/ANSI Escape sequence reference chart:
 46	Cyan
 47	White
 """
-#  ==========  End documentation  ==========
+
+End documentation
 ###
