@@ -1,3 +1,7 @@
+"""
+Location is a class which stores information for each location in the game world.  It's imported by Realm.py and it records presence of any monsters, NPCs and loot. 
+"""
+
 class Location(object):
 	""" This class defines all of the attributes to be stored for each location object
 		initializes attributes for:
