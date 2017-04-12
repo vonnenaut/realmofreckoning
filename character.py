@@ -46,5 +46,5 @@ class Character(object):
 			return False
 
 	def teleport(self, coords):
-		""" move character to the specified coordinates.  NOTE:  need to update associated location in Realm module (to avoid circular imports) """
+		""" move character to the specified coordinates. """
 		self.coords = coords
