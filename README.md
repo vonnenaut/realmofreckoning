@@ -5,20 +5,15 @@ Daniel Ashcom
 GNU GPL v 3.0
  
 
-===================================================================
+
 Known Bugs:
---------------------------------------------------------------------
 See Issues: https://github.com/vonnenaut/realmofreckoning/issues
 
 
-====================================================================
 Fixed Bugs:
---------------------------------------------------------------------
 See Issues: https://github.com/vonnenaut/realmofreckoning/issues
 
-====================================================================
 To-Do/Ideas:
-------------------------------------------------------------------
 --Add more text narrative of areas to explore
 --add item persistence on the ground when items are dropped
 --Implement item usage (health potion, equipping weapons, etc.)
@@ -27,9 +22,7 @@ To-Do/Ideas:
 --Consider creating a visual version of this game once it has more written content
 --Consider how to create randomly-generated areas with randomly-generated loot (<--  might be a good first step to implement.  See 'Design Patterns:  Elements of Reusable OO Software', p. 105)
 
-====================================================================
 Notes:
---------------------------------------------------------------------
 Update 11/21/16:  I realized when I tried to keep track of availability of items on each map location that this grid system is 
 not going to work very conveniently for passing the grid location as a name for a dictionary name/value pair serving this purpose.
 Now I realize I should have just used a traditional x,y grid to specify location from the start and I should define 0,0 as the 
