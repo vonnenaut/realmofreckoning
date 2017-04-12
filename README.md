@@ -55,6 +55,8 @@ Update 2/17/17:  I moved the methods for adding, retrieving and checking the exi
  
 Update 3/7/17:  I am in the process of separating the program into modules named as follows: main.py (file to run in order to start the program), realm.py, location.py and character.py
 
+Update 3/?/17:  The separation of the program into separate modules was completed.
+
 """
 VT100/ANSI Escape sequence reference chart:
 0	Reset all attributes
