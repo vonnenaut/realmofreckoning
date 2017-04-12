@@ -1,3 +1,9 @@
+"""
+Realm serves essentially as the game's main engine and logic handler, importing sys for ending the game, 
+vtemu for text colorization, location for handling information in each location and character for player
+and NPC (including monsters and non-combatants) stats and behaviors.  Realm, in turn, is imported and called by main.py.
+"""
+
 # imports
 ##
 import sys, vtemu
@@ -17,7 +23,7 @@ if sys.platform in ['linux2', 'cygwin']:
 	def prBlue(prt): print("\033[96m {}\033[00m" .format(prt))
 	def prLightGray(prt): print("\033[97m {}\033[00m" .format(prt))
 	def prBlack(prt): print("\033[98m {}\033[00m" .format(prt))
-
+# otherwise, if the terminal is Windows, use these codes instead
 if sys.platform == 'win32':	
 	def prRed(prt): print("\x1b[1;31m {}\x1b[00m" .format(prt))
 	def prGreen(prt): print("\x1b[2;32m {}\x1b[00m" .format(prt))
@@ -30,10 +36,8 @@ if sys.platform == 'win32':
 
 class Realm(object):
 	""" creates, stores and retrieves locations; presents narratives for each """
-	
 	# class variables
 	##
-
 	# define a dictionary which contains a tuple representing each Realm location's coordinates, paired with a list containing (1) a print statement description of the area and (2+) any accompanying commands required to add items to the player's inventory
 	LOOT_LIST = {(0,0): ["After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk.", "tinder", "tinder", "goat milk", "goat milk"],
 			 	 (0,1): ["Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old campfire.", "flint"], 
@@ -54,28 +58,28 @@ class Realm(object):
 	# methods
 	##
 	def __init__(self):
-		self.locations = {}								# dictionary containing instances of Location class representing each traversible area of the Realm
+		self.locations = {}				# dictionary containing instances of Location class representing each traversible area of the Realm
 		starting_coords = [0,0]
 		self.add_location(starting_coords)
-		self.player = self.create_Char()				# create player instance of character class
-		self.narrative(self.player.get_coords())		# this line starts the loop which gets user input for interacting with the environment
+		self.player = self.create_Char()		# create player instance of character class
+		self.narrative(self.player.get_coords())	# this line starts the loop which gets user input for interacting with the environment
 
 	def create_Char(self):
 		""" prompts user to answer questions in order to create their character """
-		# 
-		# print "Welcome to Realm of Reckoning.  Please answer the following questions to create your character:"
-		# 			
-		# print "1.  What is your character's gender?"
-		# sex = raw_input("?")
-		# if sex not in ["m", "male", "f", "female"]:
-			# print "Please enter male or female."
-		# 			
-		# print "2.  What is your character's name?"
-		# name = raw_input("?")
-		# 
-		# player = Character(sex, name, 10, 5, 3, 0, [], [0,0])
-		# print "Ok, here's some information about your character: ", player
-		return Character("male", "Dexter", 10, 5, 3, 0, [], [0,0])
+		print "Welcome to Realm of Reckoning.  Please answer the following questions to create your character:"
+		 			
+		print "1.  What is your character's gender?"
+		sex = raw_input("?")
+		if sex not in ["m", "male", "f", "female"]:
+			print "Please enter male or female."
+					
+		print "2.  What is your character's name?"
+		name = raw_input("?")
+		 
+		player = Character(sex, name, 10, 5, 3, 0, [], [0,0])
+		print "Ok, here's some information about your character: ", player
+		# For testing purposes:
+		# return Character("male", "Dexter", 10, 5, 3, 0, [], [0,0])
 
 	def get_master_loot_list(self):
 		return self.LOOT_LIST
@@ -166,9 +170,7 @@ class Realm(object):
 			prRed("Command not recognized.  Please type 'h' for help.")
 
 	def add_location(self, coords):
-		""" adds a location to the Realm """
-		# check for existence of loot entry in dictionary before assigning loot listed there to this instance's loot list
-		# location_name = self.get_location_name(coords)
+		""" adds a location to the Realm """		
 		key = tuple(coords)
 
 		# check for existence of loot to add to this location per LOOT_LIST
