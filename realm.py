@@ -324,16 +324,25 @@ class Realm(object):
 		""" begins a battle between player and any monsters in player's location """
 		monster_list = self.current_player_location.get_monsters()
 
-		if monster_list:  # if list is not empty
+		while monster_list:  # if list is not empty
 			pl_hp = self.player.get_hp()
 			prRed("Attacking %s ..." % monster_list[0].get_name())
 			pl_result = self.player.attack(monster_list[0])
+
 			if pl_result:
+				print "%s hits %s for %d points of damage." % (self.player.get_name(), monster_list[0].get_name(), pl_result[1])
 				monster_list[0].set_hp(pl_result[1])
+				if monster_list[0].get_hp() <= 0:
+					monster_list[0].die()
+					del monster_list[0]
 			for monster in monster_list:	
 				mon_result = monster.attack(self.player)
 				if mon_result:
+					print "%s hits %s for %d points of damage." % (monster.get_name(), self.player.get_name(), mon_result[1])
 					self.player.set_hp(mon_result[1])
+					if self.player.get_hp() <= 0:
+						print "%s has died valiantly.  R.I.P." % self.player.get_name()
+						self.die()
 
 	def die(self):
 		"""	this function ends the program """
