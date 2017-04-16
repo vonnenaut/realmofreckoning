@@ -1,9 +1,3 @@
-"""
-Realm serves essentially as the game's main engine and logic handler, importing sys for ending the game, 
-vtemu for text colorization, location for handling information in each location and character for player
-and NPC (including monsters and non-combatants) stats and behaviors.  Realm, in turn, is imported and called by main.py.
-"""
-
 # imports
 ##
 import sys, vtemu
@@ -23,7 +17,7 @@ if sys.platform in ['linux2', 'cygwin']:
 	def prBlue(prt): print("\033[96m {}\033[00m" .format(prt))
 	def prLightGray(prt): print("\033[97m {}\033[00m" .format(prt))
 	def prBlack(prt): print("\033[98m {}\033[00m" .format(prt))
-# otherwise, if the terminal is Windows, use these codes instead
+
 if sys.platform == 'win32':	
 	def prRed(prt): print("\x1b[1;31m {}\x1b[00m" .format(prt))
 	def prGreen(prt): print("\x1b[2;32m {}\x1b[00m" .format(prt))
@@ -36,8 +30,10 @@ if sys.platform == 'win32':
 
 class Realm(object):
 	""" creates, stores and retrieves locations; presents narratives for each """
+	
 	# class variables
 	##
+
 	# define a dictionary which contains a tuple representing each Realm location's coordinates, paired with a list containing (1) a print statement description of the area and (2+) any accompanying commands required to add items to the player's inventory
 	LOOT_LIST = {(0,0): ["After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk.", "tinder", "tinder", "goat milk", "goat milk"],
 			 	 (0,1): ["Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old campfire.", "flint"], 
@@ -52,40 +48,59 @@ class Realm(object):
 			   		(-1,0): ['bandit']
 				   }
 
+    # stats for each monster type in tuple format: (sex, name, hp, ap, mp, gld, inv) used to create via character class
+    #  Note:  need to still add last item to this tuple:  coords of location of spider before instantiating its object
+	MONSTER_STATS = {'spider': ("male", "spider", 3, 1, 0, 0, []),
+					 'bandit': ("male", "bandit", 5, 1, 0, 0, [])
+					}
+
 	#defines the input prompt
 	PROMPT = '=---> '
 
 	# methods
 	##
 	def __init__(self):
-		self.locations = {}				# dictionary containing instances of Location class representing each traversible area of the Realm
+		self.locations = {}								# dictionary containing instances of Location class representing each traversible area of the Realm
 		starting_coords = [0,0]
 		self.add_location(starting_coords)
-		self.player = self.create_Char()		# create player instance of character class
-		self.narrative(self.player.get_coords())	# this line starts the loop which gets user input for interacting with the environment
+		self.player = self.create_Char()				# create player instance of character class
+		self.narrative(self.player.get_coords())		# this line starts the loop which gets user input for interacting with the environment
 
 	def create_Char(self):
 		""" prompts user to answer questions in order to create their character """
-		print "Welcome to Realm of Reckoning.  Please answer the following questions to create your character:"
-		 			
-		print "1.  What is your character's gender?"
-		sex = raw_input("?")
-		if sex not in ["m", "male", "f", "female"]:
-			print "Please enter male or female."
-					
-		print "2.  What is your character's name?"
-		name = raw_input("?")
-		 
-		player = Character(sex, name, 10, 5, 3, 0, [], [0,0])
-		print "Ok, here's some information about your character: ", player
-		# For testing purposes:
-		# return Character("male", "Dexter", 10, 5, 3, 0, [], [0,0])
+		# 
+		# print "Welcome to Realm of Reckoning.  Please answer the following questions to create your character:"
+		# 			
+		# print "1.  What is your character's gender?"
+		# sex = raw_input("?")
+		# if sex not in ["m", "male", "f", "female"]:
+			# print "Please enter male or female."
+		# 			
+		# print "2.  What is your character's name?"
+		# name = raw_input("?")
+		# 
+		# player = Character(sex, name, 10, 5, 3, 0, [], [0,0])
+		# print "Ok, here's some information about your character: ", player
+		details = ["male", "Dexter", 10, 5, 3, 0, []]
+		return Character(details, [0,0])
 
 	def get_master_loot_list(self):
+		""" returns the entire master loot list for the realm """
 		return self.LOOT_LIST
 
+	def get_loot(self, location):
+		""" returns loot at a specified location """
+		if location in self.LOOT_LIST:
+			return self.LOOT_LIST[location]
+
 	def get__master_monster_list(self):
+		""" returns the entire master moster list for the realm """
 		return self.MONSTER_LIST
+
+	def get_monsters(self, location):
+		""" returns list of monsters at a specified location """
+		if location in self.MONSTER_LIST:
+			return self.MONSTER_LIST[location]
 
 	def add_to_locations(self, location):
 		""" adds a new Location instance to a dictionary of Location instances """
@@ -102,7 +117,7 @@ class Realm(object):
 				  	 (0,2): ["\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."]}
 
 		if self.player.newplayer == True:
-			prCyan("\nWelcome to Realm of Reckoning!")
+			prBlue("\nWelcome to Realm of Reckoning!")
 			print"\nYou awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot in \nan open field and realize that you carry nothing useful to \nhelp you survive should you run into trouble.  You look west \ntoward the direction of the distant sounds and hear that it \nis now quiet.  To your north in the distance is a fortress.  \nTo your east is a forest and to your south is a riverbank \nwith a boat tied at an old pier.  \n\nWhich direction do you go? (Press 'h' for help)"
 			self.player.newplayer = False
 
@@ -170,12 +185,14 @@ class Realm(object):
 			prRed("Command not recognized.  Please type 'h' for help.")
 
 	def add_location(self, coords):
-		""" adds a location to the Realm """		
+		""" adds a location to the Realm 
+		TO-DO:  need to instantiate monsters and then add a list of object references to them to the Location when it is created a la Locations dictionary stored for the realm"""
 		key = tuple(coords)
+		monsters = []
 
 		# check for existence of loot to add to this location per LOOT_LIST
 		if key in self.LOOT_LIST:
-			loot = self.LOOT_LIST[key]
+			loot = self.get_loot(key)
 			loot_present = True
 		else:
 			loot = []
@@ -183,11 +200,12 @@ class Realm(object):
 
 		# check for existence of monsters to add to this location per MONSTER_LIST
 		if key in self.MONSTER_LIST:
-			monster_list = self.get__master_monster_list()
-			monsters = monster_list[key]
+			monsters_list = self.get_monsters(key)
 			monsters_present = True
+			for monster in monsters_list:
+				monsters.append(Character(self.MONSTER_STATS[monster], coords))
 		else:
-			monsters = []
+			monsters_list = []
 			monsters_present = False
 		
 		# create new instance of Location and add it to the list of instances, then set it to the player's current location
@@ -216,7 +234,6 @@ class Realm(object):
 		""" attempts to return an object with a name based on the current location coordinates if the object name doesn't exist, throws NameError exception """
 		try:
 			string = self.get_location_name(current_location_coords)
-			# return self.locations[string]
 			return self.get_locations_dict()[string]
 		except NameError:
 			print "Location does not exist."
@@ -294,14 +311,29 @@ class Realm(object):
 
 		if loot_present:	# if loot is present in the area
 			if coords in self.LOOT_LIST:  # if the area has items contained in the loot list
-				# copy_of_LOOT_LIST = self.LOOT_LIST[coords]
-				for i in range(1, len(self.LOOT_LIST[coords])):
-					self.inv_add(self.LOOT_LIST[coords][i])	# execute the command(s) contained in the second element of the value list, adding said items to player's inventory
-					removal_list.append(self.LOOT_LIST[coords][i])
+				loot = self.get_loot(coords)
+				for idx in range(1, len(loot)):
+					self.inv_add(loot[idx])	# execute the command(s) contained in the second element of the value list, adding said items to player's inventory
+					removal_list.append(loot[idx])
 				self.current_player_location.remove_loot(removal_list)  # removes item from the location
 					
 		else:
 			prYellow("You found nothing useful here.")
+
+	def battle(self):
+		""" begins a battle between player and any monsters in player's location """
+		monster_list = self.current_player_location.get_monsters()
+
+		if monster_list:  # if list is not empty
+			pl_hp = self.player.get_hp()
+			prRed("Attacking %s ..." % monster_list[0].get_name())
+			pl_result = self.player.attack(monster_list[0])
+			if pl_result:
+				monster_list[0].set_hp(pl_result[1])
+			for monster in monster_list:	
+				mon_result = monster.attack(self.player)
+				if mon_result:
+					self.player.set_hp(mon_result[1])
 
 	def die(self):
 		"""	this function ends the program """
@@ -329,6 +361,7 @@ class Realm(object):
 	  	  		  "i": self.inv_list,
 	  	  		  "a": self.player.attrib_list,
 	  	  		  "x": self.search_area,
+	  	  		  "b": self.battle,
 	  	  		  "q": self.quit_game}
 		
 		if user_input in inputs:
