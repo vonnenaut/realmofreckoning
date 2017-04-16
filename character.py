@@ -18,7 +18,7 @@ class Character(object):
         self.coords = [0, 0]
 
     def __str__(self):
-        return "\nPlayer attributes for " + str(self._name) + ":\nsex: " + str(self._sex) + "\nhit points: " + str(self.hp) + "\nstamina: " + str(self.stamina) + "\nmagic points: " + str(self.mp) + "\ngold: " + str(self.gold) + "\ninventory items: " + str(self.inventory) + "\nNew player? " + str(self.newplayer) + "\nMax # inventory items: " + str(self._max_inv_size) + "\nLocation: " + str(self.get_coords())
+        return "\nPlayer attributes for " + str(self._name) + ":\nsex: " + str(self._sex) + "\nhit points: " + str(self.hp) + "\naction points: " + str(self.ap) + "\nmagic points: " + str(self.mp) + "\ngold: " + str(self.gold) + "\ninventory items: " + str(self.inventory) + "\nNew player? " + str(self.newplayer) + "\nMax # inventory items: " + str(self._max_inv_size) + "\nLocation: " + str(self.get_coords())
 
     def get_name(self):
     	""" returns character's name """
@@ -90,7 +90,7 @@ class Character(object):
 
     def die(self):
     	""" kills character """
-    	return "%s has been killed." % self.get_name()
+    	print "%s has been killed." % self.get_name()
 
     def teleport(self, coords):
         """ move character to the specified coordinates.  NOTE:  need to update associated location in Realm module (to avoid circular imports) """
