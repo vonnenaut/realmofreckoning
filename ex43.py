@@ -1,3 +1,8 @@
+"""
+This is the original exercise (43) from the book 'Learn Python the Hard Way'.
+It is included here for reference and not used with Realm of Reckoning.
+"""
+
 from sys import exit
 from random import randint
 
