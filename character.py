@@ -1,5 +1,7 @@
-# classes
-##
+"""
+Character is a class which stores information pertaining to the player.  It's imported by Realm.py and it deals with player attributes, inventory and coordinates. 
+"""
+
 class Character(object):
 	""" Represents the player with methods for inventory management, searching areas, generating narrative, moving and dying. """
 
