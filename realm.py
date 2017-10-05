@@ -13,25 +13,22 @@ from character import Character
 
 # special definitions for colorized text
 ##
-# if the terminal is Linux or Cygwin, use the following codes
-if sys.platform in ['linux2', 'cygwin']:
-	def prRed(prt): print("\033[91m {}\033[00m" .format(prt))
-	def prGreen(prt): print("\033[92m {}\033[00m" .format(prt))
-	def prYellow(prt): print("\033[93m {}\033[00m" .format(prt))
-	def prLightPurple(prt): print("\033[94m {}\033[00m" .format(prt))
-	def prPurple(prt): print("\033[95m {}\033[00m" .format(prt))
-	def prBlue(prt): print("\033[96m {}\033[00m" .format(prt))
-	def prLightGray(prt): print("\033[97m {}\033[00m" .format(prt))
-	def prBlack(prt): print("\033[98m {}\033[00m" .format(prt))
-# otherwise, if the terminal is Windows, use these codes instead
+
+# if the terminal is Windows, use these codes instead
 if sys.platform == 'win32':	
 	def prRed(prt): print("\x1b[1;31m {}\x1b[00m" .format(prt))
 	def prGreen(prt): print("\x1b[2;32m {}\x1b[00m" .format(prt))
 	def prYellow(prt): print("\x1b[1;33m {}\x1b[00m" .format(prt))
 	def prBlue(prt): print("\x1b[1;34m {}\x1b[00m" .format(prt))
 	def prPurple(prt): print("\x1b[1;35m {}\x1b[00m" .format(prt))
-	def prCyan(prt): print("\x1b[1;36m {}\x1b[00m" .format(prt))
-	def prWhite(prt): print("\x1b[1;37m {}\x1b[00m" .format(prt)) 
+
+# if the terminal is Linux or Cygwin, use the following codes
+else:
+	def prRed(prt): print("\033[91m {}\033[00m" .format(prt))
+	def prGreen(prt): print("\033[92m {}\033[00m" .format(prt))
+	def prYellow(prt): print("\033[93m {}\033[00m" .format(prt))
+	def prBlue(prt): print("\033[96m {}\033[00m" .format(prt))
+	def prPurple(prt): print("\033[95m {}\033[00m" .format(prt))
 
 
 class Realm(object):
@@ -45,7 +42,7 @@ class Realm(object):
 			 	 (-1,0): ["While searching the area, you begin to rifle through the pockets of the two bodies.  On the first, you find a notebook.  The second appears to still be alive so you don't approach him just yet.", "notebook"]
 			 	}
 
-	# TO_DO:  Add further items to these monster lists, including loot drops (randomized tiers of loot item lists) and NPC level (somewhat randomized also from tiers of NPC level lists)
+	# TO_DO:  Add further items to MONSTER_LIST, including loot drops (randomized tiers of loot item lists) and NPC level (somewhat randomized also from tiers of NPC level lists)
 	MONSTER_LIST = {(0,0): ['spider'],
 				 	(0,1): ['spider', 'spider'],
 					(0,2): ['spider'],
@@ -61,25 +58,30 @@ class Realm(object):
 		self.locations = {}				# dictionary containing instances of Location class representing each traversible area of the Realm
 		starting_coords = [0,0]
 		self.add_location(starting_coords)
-		self.player = self.create_Char()		# create player instance of character class
+		# self.create_char()		# create player instance of character class
+		# for testing, comment the above and uncomment below
+		self.player = Character('male', 'Rick', 10, 5, 3, 0, [], [0,0])
 		self.narrative(self.player.get_coords())	# this line starts the loop which gets user input for interacting with the environment
 
-	def create_Char(self):
+	def create_char(self):
 		""" prompts user to answer questions in order to create their character """
 		print "Welcome to Realm of Reckoning.  Please answer the following questions to create your character:"
 		 			
 		print "1.  What is your character's gender?"
 		sex = raw_input("?")
-		if sex not in ["m", "male", "f", "female"]:
+		if sex in ["m", "male"]:
+			sex = "male"
+		elif sex in ["f", "female"]:
+			sex = "female"
+		else:
 			print "Please enter male or female."
+			sex = raw_input("?")
 					
 		print "2.  What is your character's name?"
 		name = raw_input("?")
 		 
-		player = Character(sex, name, 10, 5, 3, 0, [], [0,0])
-		print "Ok, here's some information about your character: ", player
-		# For testing purposes:
-		# return Character("male", "Dexter", 10, 5, 3, 0, [], [0,0])
+		self.player = Character(sex, name, 10, 5, 3, 0, [], [0,0])
+		print "Ok, here's some information about your character: ", self.player
 
 	def get_master_loot_list(self):
 		return self.LOOT_LIST
@@ -102,7 +104,7 @@ class Realm(object):
 				  	 (0,2): ["\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."]}
 
 		if self.player.newplayer == True:
-			prCyan("\nWelcome to Realm of Reckoning!")
+			prBlue("\nWelcome to Realm of Reckoning!")
 			print"\nYou awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot in \nan open field and realize that you carry nothing useful to \nhelp you survive should you run into trouble.  You look west \ntoward the direction of the distant sounds and hear that it \nis now quiet.  To your north in the distance is a fortress.  \nTo your east is a forest and to your south is a riverbank \nwith a boat tied at an old pier.  \n\nWhich direction do you go? (Press 'h' for help)"
 			self.player.newplayer = False
 
@@ -241,7 +243,7 @@ class Realm(object):
 		self.narrative(self.player.get_coords())
 
 	def help_menu(self):
-		prCyan("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \ni check your inventory\na attributes\nq quit\nh help\n")
+		prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \ni check your inventory\na attributes\nq quit\nh help\n")
 
 	def inv_list(self):
 		""" Lists all the items in the player's inventory
