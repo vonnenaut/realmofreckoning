@@ -34,7 +34,7 @@ class Character(object):
 		return self.coords
 
 	def attrib_list(self):
-		print self
+		print(self)
 
 	def get_inventory(self):
 		return self.inventory

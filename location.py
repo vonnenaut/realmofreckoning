@@ -56,7 +56,7 @@ class Location(object):
 		if boolean is True or False:
 			self.monsters_present = boolean
 		else:
-			print "Invalid parameter given to set_monsters_present: ", boolean
+			print("Invalid parameter given to set_monsters_present: ", boolean)
 
 	def get_monsters(self):
 		""" returns a list of all monsters present at this location """
