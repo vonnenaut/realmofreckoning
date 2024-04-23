@@ -8,6 +8,7 @@ and NPC (including monsters and non-combatants) stats and behaviors.  Realm, in 
 ##
 import sys, vtemu
 from location import Location
+import loc_mgr
 from character import Character
 
 
@@ -35,19 +36,6 @@ class Realm(object):
 	""" creates, stores and retrieves locations; presents narratives for each """
 	# class variables
 	##
-	# define a dictionary which contains a tuple representing each Realm location's coordinates, paired with a list containing (1) a print statement description of the area and (2+) any accompanying commands required to add items to the player's inventory
-	LOOT_LIST = {(0,0): ["After searching the area you find a bit of rope useful for tinder and a strangely-chilled glass of goat's milk.", "tinder", "tinder", "goat milk", "goat milk"],
-			 	 (0,1): ["Upon looking around the ruins, you find very little of use, all having been picked clean long ago by scavengers.  You did however manage to find a bit of flint near an old campfire.", "flint"], 
-			 	 (0,2): ["You stumble upon a rusty blade.", "rusty blade"],
-			 	 (-1,0): ["While searching the area, you begin to rifle through the pockets of the two bodies.  On the first, you find a notebook.  The second appears to still be alive so you don't approach him just yet.", "notebook"]
-			 	}
-
-	# TO_DO:  Add further items to MONSTER_LIST, including loot drops (randomized tiers of loot item lists) and NPC level (somewhat randomized also from tiers of NPC level lists)
-	MONSTER_LIST = {(0,0): ['spider'],
-				 	(0,1): ['spider', 'spider'],
-					(0,2): ['spider'],
-			   		(-1,0): ['bandit']
-				   }
 
 	#defines the input prompt
 	PROMPT = '=---> '
@@ -60,7 +48,7 @@ class Realm(object):
 		self.add_location(starting_coords)
 		# self.create_char()		# create player instance of character class
 		# for testing, comment the above and uncomment below
-		self.player = Character('male', 'Rick', 10, 5, 3, 0, [], [0,0])
+		self.player = Character('male', 'Rick', 10, 5, 3, 0, [], [0,0], '')
 		self.narrative(self.player.get_coords())	# this line starts the loop which gets user input for interacting with the environment
 
 	def create_char(self):
@@ -83,11 +71,31 @@ class Realm(object):
 		self.player = Character(sex, name, 10, 5, 3, 0, [], [0,0])
 		print("Ok, here's some information about your character: ", self.player)
 
-	def get_master_loot_list(self):
-		return self.LOOT_LIST
+	def add_location(self, coords):
+		""" adds a location to the Realm """
+		key = tuple(coords)
 
-	def get__master_monster_list(self):
-		return self.MONSTER_LIST
+		# check for existence of loot to add to this location per LOOT_LIST
+		if key in loc_mgr.LOOT_LIST:
+			loot = loc_mgr.LOOT_LIST[key]
+			loot_present = True
+		else:
+			loot = []
+			loot_present = False
+
+		# check for existence of monsters to add to this location per MONSTER_LIST
+		if key in loc_mgr.MONSTER_LIST:
+			monster_list = loc_mgr.get_master_monster_list()
+			monsters = monster_list[key]
+			monsters_present = True
+		else:
+			monsters = []
+			monsters_present = False
+
+		# create new instance of Location and add it to the list of instances, then set it to the player's current location
+		new_location = Location(coords, monsters_present, loot_present, monsters, loot)
+		self.add_to_locations(new_location)
+		self.current_player_location = new_location
 
 	def add_to_locations(self, location):
 		""" adds a new Location instance to a dictionary of Location instances """
@@ -117,9 +125,12 @@ class Realm(object):
 					temp_list.append(i)
 					choice_key = tuple(temp_list)
 					narratives[key][i](choice_key)
-		else:  # if we have gone off the map of existing narratives, teleport back to the starting point (this will be removed once natural boundaries are put into place.)
-			prRed("Under construction.  Returning to the beginning.")
-			self.player.teleport([0,0])
+		else: # if we have gone off the map of existing narratives, return to the location from which player attempted to move
+        # OLD LOGIC:  if we have gone off the map of existing narratives, teleport back to the starting point (this will be removed once natural boundaries are put into place.)
+			prRed("This location is under construction. Try a different direction.")
+			# self.player.teleport([0,0])
+			# TODO: move back method
+			self.move_back(self.player)
 			self.narrative(self.player.get_coords())
 	
 		# get user input
@@ -171,32 +182,6 @@ class Realm(object):
 		else:
 			prRed("Command not recognized.  Please type 'h' for help.")
 
-	def add_location(self, coords):
-		""" adds a location to the Realm """		
-		key = tuple(coords)
-
-		# check for existence of loot to add to this location per LOOT_LIST
-		if key in self.LOOT_LIST:
-			loot = self.LOOT_LIST[key]
-			loot_present = True
-		else:
-			loot = []
-			loot_present = False
-
-		# check for existence of monsters to add to this location per MONSTER_LIST
-		if key in self.MONSTER_LIST:
-			monster_list = self.get__master_monster_list()
-			monsters = monster_list[key]
-			monsters_present = True
-		else:
-			monsters = []
-			monsters_present = False
-		
-		# create new instance of Location and add it to the list of instances, then set it to the player's current location
-		new_location = Location(coords, monsters_present, loot_present, monsters, loot)
-		self.add_to_locations(new_location)
-		self.current_player_location = new_location
-
 	def get_locations_dict(self):
 		return self.locations
 
@@ -226,6 +211,8 @@ class Realm(object):
 	def move(self, char, direction):
 		""" taking character instance and user input direction as parameters, handles player movement between Locations """
 		# pair all options with an action in a dictionary
+  		# TODO: replace with imported movement module, a la
+		# "n": [0, 1], "s": [-1, 0], etc.
 		directions = { "n": [char.get_coord(0),(char.get_coord(1)+1)],
 					   "s": [char.get_coord(0),(char.get_coord(1)-1)],
 					   "e": [(char.get_coord(0)+1),char.get_coord(1)],
@@ -233,9 +220,46 @@ class Realm(object):
 
 		# execute directional movement by updating player's coords
 		if direction in directions:
+			char.set_move_dir(direction)
 			char.set_coords(directions[direction])
 			coords = char.get_coords()
 		# check for the existence of the Location to which the player has moved 
+		if self.check_location_existence(coords):
+			self.get_location(coords)
+		else:
+			self.add_location(coords)
+		self.narrative(self.player.get_coords())
+
+	def invert_dir(self, dir):
+		""" invert a direction, i.e., n --> s, e --> w """
+		inversions = {
+						'n': 's',
+                		's': 'n',
+                  		'e': 'w',
+                    	'w': 'e' }
+
+		if dir in inversions:
+			return inversions[dir]
+
+	def move_back(self, char):
+		""" move player back to the location they came from
+  			This is intended to handle under-construction areas """
+		last_move_dir = self.player.get_move_dir()
+
+		# pair all options with an action in a dictionary
+		directions = { "n": [char.get_coord(0),(char.get_coord(1)+1)],
+					   "s": [char.get_coord(0),(char.get_coord(1)-1)],
+					   "e": [(char.get_coord(0)+1),char.get_coord(1)],
+					   "w": [(char.get_coord(0)-1), char.get_coord(1)] }
+
+		# execute directional movement by updating player's coords
+		move_dir = self.invert_dir(last_move_dir)
+
+		if move_dir in directions:
+			self.player.set_move_dir(move_dir)
+			self.player.set_coords(directions[move_dir])
+			coords = self.player.get_coords()
+		# check for the existence of the Location to which the player has moved
 		if self.check_location_existence(coords):
 			self.get_location(coords)
 		else:
@@ -295,11 +319,11 @@ class Realm(object):
 		removal_list = []
 
 		if loot_present:	# if loot is present in the area
-			if coords in self.LOOT_LIST:  # if the area has items contained in the loot list
+			if coords in loc_mgr.LOOT_LIST:  # if the area has items contained in the loot list
 				# copy_of_LOOT_LIST = self.LOOT_LIST[coords]
-				for i in range(1, len(self.LOOT_LIST[coords])):
-					self.inv_add(self.LOOT_LIST[coords][i])	# execute the command(s) contained in the second element of the value list, adding said items to player's inventory
-					removal_list.append(self.LOOT_LIST[coords][i])
+				for i in range(1, len(loc_mgr.LOOT_LIST[coords])):
+					self.inv_add(loc_mgr.LOOT_LIST[coords][i])	# execute the command(s) contained in the second element of the value list, adding said items to player's inventory
+					removal_list.append(loc_mgr.LOOT_LIST[coords][i])
 				self.current_player_location.remove_loot(removal_list)  # removes item from the location
 					
 		else:

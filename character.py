@@ -1,11 +1,13 @@
 """
 Character is a class which stores information pertaining to the player.  It's imported by Realm.py and it deals with player attributes, inventory and coordinates. 
 """
+import movement
+import loc_mgr
 
 class Character(object):
 	""" Represents the player with methods for inventory management, searching areas, generating narrative, moving and dying. """
 
-	def __init__(self, sex, name, hp, stam, mp, gld, inv, coords):
+	def __init__(self, sex, name, hp, stam, mp, gld, inv, coords, move_dir):
 		self._sex = sex
 		self._name = name
 		self.hp = hp
@@ -15,7 +17,8 @@ class Character(object):
 		self.inventory =  inv
 		self.newplayer = True
 		self._max_inv_size = 5
-		self.coords = [0,0]
+		self.coords = [0,0]  # [x, y]  coords[0] --> x, coords[1] --> y
+		self.move_dir = move_dir
 
 	def __str__(self):
 		return "\nPlayer attributes for " + str(self._name) + ":\nsex: " + str(self._sex) + "\nhit points: " + str(self.hp) + "\nstamina: " + str(self.stamina) + "\nmagic points: " + str(self.mp) + "\ngold: " + str(self.gold) + "\ninventory items: " + str(self.inventory) + "\nNew player? " + str(self.newplayer) + "\nMax # inventory items: " + str(self._max_inv_size) + "\nLocation: " + str(self.get_coords())
@@ -32,6 +35,15 @@ class Character(object):
 	def get_coords(self):
 		""" returns the player's coordinates, (x, y) in the Realm """
 		return self.coords
+
+	def set_move_dir(self, move_dir):
+		""" sets the player's direction of most recent movement
+            possible values are n, s, e or w """
+		self.move_dir = move_dir
+
+	def get_move_dir(self):
+		""" returns the player's direction of most recent movement """
+		return self.move_dir
 
 	def attrib_list(self):
 		print(self)
