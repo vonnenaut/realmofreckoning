@@ -4,7 +4,7 @@ TODO: convert this to a kanban board or at least make it more like actual markdo
 ## A Text-based adventure game
 ### by
 ### Daniel Ashcom
-# 3NU GPL v 3.0 but I want my free beer.
+#### 3NU GPL v 3.0 but I want my free beer.
 
 &nbsp;
 ---
