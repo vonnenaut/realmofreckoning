@@ -1,3 +1,5 @@
+TODO: convert this to a kanban board or at least make it more like actual markdown.
+
 # Realm of Reckoning
 # A Text-based adventure game
 # by
