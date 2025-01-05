@@ -6,9 +6,8 @@ and NPC (including monsters and non-combatants) stats and behaviors.  Realm, in 
 
 # imports
 ##
-import sys, vtemu
+import sys, loc_mgr, json, vtemu
 from location import Location
-import loc_mgr
 from character import Character
 
 
@@ -49,6 +48,14 @@ class Realm(object):
 		# self.create_char()		# create player instance of character class
 		# for testing, comment the above and uncomment below
 		self.player = Character('male', 'Rick', 10, 5, 3, 0, [], [0,0], '')
+
+		# TODO: open json file to be used for retrieving narrative for each location on grid
+		with open('narratives.json', 'r') as narratives_file:
+			self.narratives_data = json.load(narratives_file)
+		# TODO: remove
+		# Test
+		# print("self.narratives_data: {}".format(self.narratives_data))
+		# print("self.narratives_data['0,0']['text']: {}".format(self.narratives_data['0,0']['text'])) 
 		self.narrative(self.player.get_coords())	# this line starts the loop which gets user input for interacting with the environment
 
 	def create_char(self):
@@ -104,7 +111,12 @@ class Realm(object):
 	def narrative(self, area):
 		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
 
-		key = tuple(area)
+		# key = tuple(area)
+		key = "{},{}".format(area.x_coord,area.y_coord)
+
+        # TODO: convert below to load from json file, narratives.json. Something like:
+        # ?
+        # NOTE: self.narratives_data json object replaces narratives dictionary
 
 		narratives = {(0,0): ["\n     You are standing in the same field in which you first awoke\nwithout any memory of how you got here.  Which way?\n"],
 				  	 (-1,0): ["\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\nlife.  Do you approach the bodies? (y/n)", self.encounter],
@@ -116,9 +128,10 @@ class Realm(object):
 			print("\nYou awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot in \nan open field and realize that you carry nothing useful to \nhelp you survive should you run into trouble.  You look west \ntoward the direction of the distant sounds and hear that it \nis now quiet.  To your north in the distance is a fortress.  \nTo your east is a forest and to your south is a riverbank \nwith a boat tied at an old pier.  \n\nWhich direction do you go? (Press 'h' for help)")
 			self.player.newplayer = False
 
-		elif key in narratives:
-			print(narratives[key][0])
-			if len(narratives[key]) > 1:  # if there are commands associated with this area, execute them
+		elif key in self.narratives_data:
+			print(self.narratives_data[key]['text'])
+			# if len(narratives[key]) > 1:  # if there are commands associated with this area, execute them
+			if self.narratives_data[key]['action'] != None:
 				for i in range(1,len(narratives[key])):
 					# create a key for command associated with narrative (3 digits: first two are the location, i.e., area, last is an index of the encounter itself appended to the area.  This indexing number may not be needed if there will never be more than one encounter per Realm Location.)
 					temp_list = area[:]
@@ -126,13 +139,13 @@ class Realm(object):
 					choice_key = tuple(temp_list)
 					narratives[key][i](choice_key)
 		else: # if we have gone off the map of existing narratives, return to the location from which player attempted to move
-        # OLD LOGIC:  if we have gone off the map of existing narratives, teleport back to the starting point (this will be removed once natural boundaries are put into place.)
 			prRed("This location is under construction. Try a different direction.")
 			# self.player.teleport([0,0])
 			# TODO: move back method
 			self.move_back(self.player)
 			self.narrative(self.player.get_coords())
 	
+		# TODO: should we get user input from narrative method or return to some more central location to perpetuate the loop?
 		# get user input
 		user_input = input(self.PROMPT)
 		# get rid of any capitalized typing by the user
