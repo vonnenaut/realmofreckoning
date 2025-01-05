@@ -112,16 +112,17 @@ class Realm(object):
 		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
 
 		# key = tuple(area)
-		key = "{},{}".format(area.x_coord,area.y_coord)
+		key = "{},{}".format(area[0],area[1])
+		print("type(key): {}".format(type(key)))
 
         # TODO: convert below to load from json file, narratives.json. Something like:
         # ?
         # NOTE: self.narratives_data json object replaces narratives dictionary
 
-		narratives = {(0,0): ["\n     You are standing in the same field in which you first awoke\nwithout any memory of how you got here.  Which way?\n"],
-				  	 (-1,0): ["\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\nlife.  Do you approach the bodies? (y/n)", self.encounter],
-				  	 (0,1): ["\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which has decayed with time.  \nThere is nothing here but ruin.  As you approach an outcrop \nof rock, you realize there is a narrow passage leading down \ninto the ground, perhaps an old cellar entrance.  \nDo you enter? (y/n)", self.encounter],
-				  	 (0,2): ["\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."]}
+		# narratives = {(0,0): ["\n     You are standing in the same field in which you first awoke\nwithout any memory of how you got here.  Which way?\n"],
+				  	#  (-1,0): ["\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\nlife.  Do you approach the bodies? (y/n)", self.encounter],
+				  	#  (0,1): ["\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which has decayed with time.  \nThere is nothing here but ruin.  As you approach an outcrop \nof rock, you realize there is a narrow passage leading down \ninto the ground, perhaps an old cellar entrance.  \nDo you enter? (y/n)", self.encounter],
+				  	#  (0,2): ["\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."]}
 
 		if self.player.newplayer == True:
 			prBlue("\nWelcome to Realm of Reckoning!")
@@ -130,17 +131,21 @@ class Realm(object):
 
 		elif key in self.narratives_data:
 			print(self.narratives_data[key]['text'])
-			# if len(narratives[key]) > 1:  # if there are commands associated with this area, execute them
-			if self.narratives_data[key]['action'] != None:
-				for i in range(1,len(narratives[key])):
+			actions = self.narratives_data[key]['actions']
+			if actions != None:  # if there are actions associated with this area, execute them
+				for i in actions:
+					# TODO: rework below using json data for encounters
 					# create a key for command associated with narrative (3 digits: first two are the location, i.e., area, last is an index of the encounter itself appended to the area.  This indexing number may not be needed if there will never be more than one encounter per Realm Location.)
 					temp_list = area[:]
 					temp_list.append(i)
-					choice_key = tuple(temp_list)
-					narratives[key][i](choice_key)
+					choice_key = "{},{},{}".format(temp_list[0], temp_list[1], temp_list[2])
+					# self.encounter(choice_key)
+					# TODO: how to retrieve name of method to call and then call it?
+					method = getattr(self, actions)
+					if method != None:
+						method(choice_key)
 		else: # if we have gone off the map of existing narratives, return to the location from which player attempted to move
 			prRed("This location is under construction. Try a different direction.")
-			# self.player.teleport([0,0])
 			# TODO: move back method
 			self.move_back(self.player)
 			self.narrative(self.player.get_coords())
