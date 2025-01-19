@@ -6,16 +6,16 @@
 
   "-1,0": {
     "text": "\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\nlife.  Do you approach the bodies? (y/n)", 
-    "actions": ["self.encounter"]
+    "actions": ["body"]
   },
 
   "0,1": {
-    "text": "\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which has decayed with time.  \nThere is nothing here but ruin.  As you approach an outcrop \nof rock, you realize there is a narrow passage leading down \ninto the ground, perhaps an old cellar entrance.  \nDo you enter? (y/n)",
-    "actions": ["self.encounter"]
+    "text": "\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which has decayed with time.  \nThere is nothing here but ruin.  As you approach an outcrop \nof rock, you realize there is a narrow passage of steps leading down \ninto the ground, perhaps an old cellar entrance.  \nDo you enter? (y/n)",
+    "actions": ["steps"]
   },
 
   "0,2": {
-    "text": "\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail.",
+    "text": "\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a town with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail.",
     "actions": null
   }
 }
