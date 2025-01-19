@@ -1,7 +1,8 @@
 """
 Realm serves essentially as the game's main engine and logic handler, importing sys for ending the game, 
 vtemu for text colorization, location for handling information in each location and character for player
-and NPC (including monsters and non-combatants) stats and behaviors.  Realm, in turn, is imported and called by main.py.
+and NPC (including monsters and non-combatants) stats and behaviors. Realm reads two json files, narratives.json and encounters.json, which contain narrative and encounter text and choices.
+Realm, in turn, is imported and called by main.py.
 """
 
 # imports
@@ -32,7 +33,9 @@ else:
 
 
 class Realm(object):
-	""" creates, stores and retrieves locations; presents narratives for each """
+	"""
+ 		Creates, stores and retrieves locations; presents narratives for each
+   	"""
 	# class variables
 	##
 
@@ -54,16 +57,6 @@ class Realm(object):
 			self.narratives_data = json.load(narratives_file)
 		with open('encounters.json', 'r') as encounters_file:
 			self.encounters_data = json.load(encounters_file)
-  
-  		# TODO: remove
-		# Test
-		# print("\nself.narratives_data:\n {}".format(self.narratives_data))
-		# print("\nself.narratives_data['0,0']['text']:\n {}".format(self.narratives_data['0,0']['text']))
-		# print("\nself.narratives_data['0,0']['actions']:\n {}".format(self.narratives_data['0,0']['actions']))
-
-		# print("\nself.encounters_data:\n {}".format(self.encounters_data)
-        # )
-		# print("\nself.encounters_data['0,1,1']:\n {}".format(self.encounters_data['0,1,1']["y"]))  
   
 		self.narrative(self.player.get_coords())	# this line starts the loop which gets user input for interacting with the environment
   
@@ -92,7 +85,9 @@ class Realm(object):
 		print("Ok, here's some information about your character: ", self.player)
 
 	def add_location(self, coords):
-		""" adds a location to the Realm """
+		"""
+  			Adds a location to the Realm
+     	"""
 		key = tuple(coords)
 
 		# check for existence of loot to add to this location per LOOT_LIST
@@ -118,11 +113,15 @@ class Realm(object):
 		self.current_player_location = new_location
 
 	def add_to_locations(self, location):
-		""" adds a new Location instance to a dictionary of Location instances """
+		"""
+  			Adds a new Location instance to a dictionary of Location instances.
+     	"""
 		self.get_locations_dict()[location.name] = location
 
 	def narrative(self, area):
-		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
+		"""
+  			Handles delivery of narrative text based on location as well as any choices available in any given location
+     	"""
 		key = "{},{}".format(area[0],area[1])
 
 		if self.player.newplayer == True:
@@ -157,13 +156,17 @@ class Realm(object):
 
 
 	def next_choice(self, choice_key):
-		""" increments choice_key's 3rd number to proceed a deeper level in the branching choices for any location """
-		# cast choice_key back as a list so that it can be modified.  I'm pretty sure others would frown on this approach but it works and I have no idea of how else to create this functionality
+		"""
+  			Increments choice_key's 3rd number to proceed a deeper level in the branching choices for any location
+     	"""
+		# cast choice_key back as a list so that it can be modified.
 		choice_key = list(choice_key)
 		self.encounter(choice_key)
 
 	def encounter(self, choice_key):
-		""" handles interactions for encounters on specific Realm Locations """
+		"""
+  			Handles interactions for encounters on specific Realm Locations
+     	"""
 		# a third element, a descriptive word or phrase, has been added to the narratives key to make choice_key, and it represents a sort of level of depth (decision/choice 1: outcome, decision/choice 2/outcome, etc.)  The format of each of these choice_keys goes in the string form "x-coordinate,y-coordinate,description", to be used to look up narrative and possible further choices in the file encounters.json, which is imported as the variable encounters_data.
 		
 		# prompt user for input in respose to encounter
@@ -182,10 +185,17 @@ class Realm(object):
 			prRed("Command not recognized.  Please type 'h' for help.")
 
 	def get_locations_dict(self):
+		""" Returns the dict containing all existing Locations
+  
+			Returns:
+				dict: a dictionary of Location objects used to faciliate player exploration of the game world
+		"""
 		return self.locations
 
 	def check_location_existence(self, coords):
-		""" Check for the existence of a Location object and create it if it doesn't exist yet.  This is called when moving to a different location on the Realm """
+		"""
+  			Checks for the existence of a Location object and create it if it doesn't exist yet.  This is called when moving to a different location on the Realm
+     	"""
 		name = self.get_location_name(coords)
 
 		if name in self.get_locations_dict():
@@ -194,15 +204,18 @@ class Realm(object):
 			return False
 
 	def get_location_name(self, coords):
-		""" takes Location coordinates as input, returning a string name for a Location """
+		"""
+  			Takes Location coordinates as input, returning a string name for a Location
+     	"""
 		name = str(coords[0]) + str(coords[1])
 		return name
 
 	def get_location(self, current_location_coords):
-		""" attempts to return an object with a name based on the current location coordinates if the object name doesn't exist, throws NameError exception """
+		"""
+  			Attempts to return an object with a name based on the current location coordinates if the object name doesn't exist, throws NameError exception
+     	"""
 		try:
 			string = self.get_location_name(current_location_coords)
-			# return self.locations[string]
 			return self.get_locations_dict()[string]
 		except NameError:
 			print("Location does not exist.")
@@ -241,8 +254,10 @@ class Realm(object):
 			return inversions[dir]
 
 	def move_back(self, char):
-		""" move player back to the location they came from
-  			This is intended to handle under-construction areas """
+		""" 
+  			Moves player back to the location they came from.
+  			This is intended to handle under-construction areas.
+     	"""
 		last_move_dir = self.player.get_move_dir()
 
 		# pair all options with an action in a dictionary
@@ -266,16 +281,22 @@ class Realm(object):
 		self.narrative(self.player.get_coords())
 
 	def help_menu(self):
+		"""
+			Prints a help menu listing possible user commands
+		"""
 		prBlue("\nHelp:\nn move north\ns move south\ne move east\nw move west\nx search \ni check your inventory\na attributes\nq quit\nh help\n")
 
 	def inv_list(self):
-		""" Lists all the items in the player's inventory
-		"""
+		""" 
+  			Lists all the items in the player's inventory
+     	"""
 		print("\nInventory: \n")
 		prGreen(self.player.get_inventory())
 
 	def inv_add(self, item):
-		""" Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full. """
+		""" 
+  			Adds an item to the player's inventory, asking if they wish to drop an item if the inventory is full. 
+     	"""
 		if self.player.add_to_inventory(item):
 			prGreen("\n %s added to inventory." % (item))
 		else:
@@ -288,7 +309,9 @@ class Realm(object):
 				print("Dropped %s on the ground." % (item))
 
 	def inv_prmpt_remove(self):
-		""" Prompts player to pick an item to remove from the inventory	"""
+		""" 
+  			Prompts player to pick an item to remove from the inventory	
+     	"""
 		print("\nWhich item do you wish to remove?\n")
 		prGreen(self.player.inventory)
 		print("\n")
@@ -304,8 +327,9 @@ class Realm(object):
 		return
 
 	def inv_remove(self, item):
-		""" Removes an item from the player's inventory (and adds it to the location).  Called from inv_prmpt_remove() function """
-		## TO-DO: pop item instead, adding it to the list of items in the current Location object
+		""" 
+  			Removes an item from the player's inventory (and adds it to the location).  Called from inv_prmpt_remove() function
+     	"""
 		inventory = self.player.get_inventory()
 		dropped_item = inventory.pop(inventory.index(item))
 		self.current_player_location.add_loot(dropped_item)
@@ -329,11 +353,16 @@ class Realm(object):
 			prYellow("You found nothing useful here.")
 
 	def die(self):
-		"""	this function ends the program """
+		"""	
+  			Ends the game when player dies
+     	"""
 		message = prRed("\nGame Over.\n")
 		sys.exit(message)
 
 	def quit_game(self):
+		"""
+			Exits the game when player presses 'q'
+		"""
 		prRed("Are you sure you want to exit? (y/n)")
 		choice = input(self.PROMPT)
 
@@ -343,7 +372,9 @@ class Realm(object):
 			print("Let's get back to it then.")
 
 	def keydown(self, user_input):
-		""" Handles user input """
+		""" 
+  			Handles user input
+     	"""
 		
 		# dictionary of possible user inputs with matching names of methods to call for each
 		inputs = {"n": self.move, 

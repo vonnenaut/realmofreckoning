@@ -21,7 +21,7 @@ class Character(object):
 		self.move_dir = move_dir
 
 	def __str__(self):
-		return "\nPlayer attributes for " + str(self._name) + ":\nsex: " + str(self._sex) + "\nhit points: " + str(self.hp) + "\nstamina: " + str(self.stamina) + "\nmagic points: " + str(self.mp) + "\ngold: " + str(self.gold) + "\ninventory items: " + str(self.inventory) + "\nNew player? " + str(self.newplayer) + "\nMax # inventory items: " + str(self._max_inv_size) + "\nLocation: " + str(self.get_coords())
+		return "\nPlayer attributes for " + str(self._name) + ":\nsex: \t\t" + str(self._sex) + "\nhit points: \t" + str(self.hp) + "\nstamina: \t" + str(self.stamina) + "\nmagic points: \t" + str(self.mp) + "\ngold: \t\t" + str(self.gold) + "\ninventory items: \n" + str(self.inventory) + "\nNew player? " + str(self.newplayer) + "\nInventory size: " + str(self._max_inv_size) + "\nLocation: " + str(self.get_coords())
 
 	def set_coords(self, coords):
 		""" sets the player's coordinates in the Realm """
