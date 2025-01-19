@@ -45,7 +45,7 @@ class Realm(object):
 		self.locations = {}				# dictionary containing instances of Location class representing each traversible area of the Realm
 		starting_coords = [0,0]
 		self.add_location(starting_coords)
-		# self.create_char()		# create player instance of character class
+		# self.create_char()		# create player instance of character class  #TODO: implement player creation process at start of game
 		# for testing, comment the above and uncomment below
 		self.player = Character('male', 'Rick', 10, 5, 3, 0, [], [0,0], '')
 
@@ -54,8 +54,8 @@ class Realm(object):
 			self.narratives_data = json.load(narratives_file)
 		# TODO: remove
 		# Test
-		# print("self.narratives_data: {}".format(self.narratives_data))
-		# print("self.narratives_data['0,0']['text']: {}".format(self.narratives_data['0,0']['text'])) 
+		print("self.narratives_data: {}".format(self.narratives_data))
+		print("self.narratives_data['0,0']['text']: {}".format(self.narratives_data['0,0']['text'])) 
 		self.narrative(self.player.get_coords())	# this line starts the loop which gets user input for interacting with the environment
 
 	def create_char(self):
