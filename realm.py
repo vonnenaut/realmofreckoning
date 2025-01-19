@@ -6,9 +6,8 @@ and NPC (including monsters and non-combatants) stats and behaviors.  Realm, in 
 
 # imports
 ##
-import sys, vtemu
+import sys, loc_mgr, json, vtemu
 from location import Location
-import loc_mgr
 from character import Character
 
 
@@ -46,9 +45,17 @@ class Realm(object):
 		self.locations = {}				# dictionary containing instances of Location class representing each traversible area of the Realm
 		starting_coords = [0,0]
 		self.add_location(starting_coords)
-		# self.create_char()		# create player instance of character class
+		# self.create_char()		# create player instance of character class  #TODO: implement player creation process at start of game
 		# for testing, comment the above and uncomment below
 		self.player = Character('male', 'Rick', 10, 5, 3, 0, [], [0,0], '')
+
+		# TODO: open json file to be used for retrieving narrative for each location on grid
+		with open('narratives.json', 'r') as narratives_file:
+			self.narratives_data = json.load(narratives_file)
+		# TODO: remove
+		# Test
+		print("self.narratives_data: {}".format(self.narratives_data))
+		print("self.narratives_data['0,0']['text']: {}".format(self.narratives_data['0,0']['text'])) 
 		self.narrative(self.player.get_coords())	# this line starts the loop which gets user input for interacting with the environment
 
 	def create_char(self):
@@ -104,35 +111,46 @@ class Realm(object):
 	def narrative(self, area):
 		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
 
-		key = tuple(area)
+		# key = tuple(area)
+		key = "{},{}".format(area[0],area[1])
+		print("type(key): {}".format(type(key)))
 
-		narratives = {(0,0): ["\n     You are standing in the same field in which you first awoke\nwithout any memory of how you got here.  Which way?\n"],
-				  	 (-1,0): ["\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\nlife.  Do you approach the bodies? (y/n)", self.encounter],
-				  	 (0,1): ["\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which has decayed with time.  \nThere is nothing here but ruin.  As you approach an outcrop \nof rock, you realize there is a narrow passage leading down \ninto the ground, perhaps an old cellar entrance.  \nDo you enter? (y/n)", self.encounter],
-				  	 (0,2): ["\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."]}
+        # TODO: convert below to load from json file, narratives.json. Something like:
+        # ?
+        # NOTE: self.narratives_data json object replaces narratives dictionary
+
+		# narratives = {(0,0): ["\n     You are standing in the same field in which you first awoke\nwithout any memory of how you got here.  Which way?\n"],
+				  	#  (-1,0): ["\nAs you proceed west, you come upon signs of a battle, \nincluding two bodies lying face-down at the edge of a wood\n near the field in which you awoke.  There are no signs of\nlife.  Do you approach the bodies? (y/n)", self.encounter],
+				  	#  (0,1): ["\n     You walk for some time to finally arrive at an old, \napparently abandoned fortress which has decayed with time.  \nThere is nothing here but ruin.  As you approach an outcrop \nof rock, you realize there is a narrow passage leading down \ninto the ground, perhaps an old cellar entrance.  \nDo you enter? (y/n)", self.encounter],
+				  	#  (0,2): ["\n     As you head north around the abandoned and crumbling\nfortress you see a valley spread out before you.  In the\ndistance to the north is a village with wafts of smoke being\ncarried off by the breeze trailing over the scene like\nthe twisted tails of many kites.  To the west gently\nsloping foothills transition into distant blue mountains\nand to the east, a vast forest conspires to block out all \nsurface detail."]}
 
 		if self.player.newplayer == True:
 			prBlue("\nWelcome to Realm of Reckoning!")
 			print("\nYou awaken to the distant sound of commotion to your west.  \nYou open your eyes and realize you are in a vulnerable spot in \nan open field and realize that you carry nothing useful to \nhelp you survive should you run into trouble.  You look west \ntoward the direction of the distant sounds and hear that it \nis now quiet.  To your north in the distance is a fortress.  \nTo your east is a forest and to your south is a riverbank \nwith a boat tied at an old pier.  \n\nWhich direction do you go? (Press 'h' for help)")
 			self.player.newplayer = False
 
-		elif key in narratives:
-			print(narratives[key][0])
-			if len(narratives[key]) > 1:  # if there are commands associated with this area, execute them
-				for i in range(1,len(narratives[key])):
+		elif key in self.narratives_data:
+			print(self.narratives_data[key]['text'])
+			actions = self.narratives_data[key]['actions']
+			if actions != None:  # if there are actions associated with this area, execute them
+				for i in actions:
+					# TODO: rework below using json data for encounters
 					# create a key for command associated with narrative (3 digits: first two are the location, i.e., area, last is an index of the encounter itself appended to the area.  This indexing number may not be needed if there will never be more than one encounter per Realm Location.)
 					temp_list = area[:]
 					temp_list.append(i)
-					choice_key = tuple(temp_list)
-					narratives[key][i](choice_key)
+					choice_key = "{},{},{}".format(temp_list[0], temp_list[1], temp_list[2])
+					# self.encounter(choice_key)
+					# TODO: how to retrieve name of method to call and then call it?
+					method = getattr(self, actions)
+					if method != None:
+						method(choice_key)
 		else: # if we have gone off the map of existing narratives, return to the location from which player attempted to move
-        # OLD LOGIC:  if we have gone off the map of existing narratives, teleport back to the starting point (this will be removed once natural boundaries are put into place.)
 			prRed("This location is under construction. Try a different direction.")
-			# self.player.teleport([0,0])
 			# TODO: move back method
 			self.move_back(self.player)
 			self.narrative(self.player.get_coords())
 	
+		# TODO: should we get user input from narrative method or return to some more central location to perpetuate the loop?
 		# get user input
 		user_input = input(self.PROMPT)
 		# get rid of any capitalized typing by the user

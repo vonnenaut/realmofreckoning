@@ -17,7 +17,7 @@ class Character(object):
 		self.inventory =  inv
 		self.newplayer = True
 		self._max_inv_size = 5
-		self.coords = [0,0]  # [x, y]  coords[0] --> x, coords[1] --> y
+		self.coords = [0,0]
 		self.move_dir = move_dir
 
 	def __str__(self):
