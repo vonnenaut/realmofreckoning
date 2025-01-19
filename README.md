@@ -1,13 +1,14 @@
 # Realm of Reckoning
-## A Text-based adventure game
+## A text-based adventure game
 ### by
 ### Daniel Ashcom
 #### GNU GPL v 3.0
 
-## To Run:
-From project root (realofreckoning folder) type:
+&nbsp;
+---
 
-`source venv/bin/activate` 
+## To Run:
+From project root (realofreckoning folder) type `source venv/bin/activate` to enter the virtual environment, and `python3 main.py` to start the game.
 
 
 ## Known Bugs:
@@ -94,8 +95,8 @@ Additionally, I intend to try to implement the Monte Carlo method somehow into t
 
 ## Appendix
 
-"""
 VT100/ANSI Escape sequence reference chart:
+```
 0	Reset all attributes
 1	Bright
 2	Dim
@@ -123,7 +124,7 @@ VT100/ANSI Escape sequence reference chart:
 45	Magenta
 46	Cyan
 47	White
-"""
+```
 
 End documentation
 ###
