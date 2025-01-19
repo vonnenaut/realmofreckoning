@@ -7,8 +7,14 @@
 &nbsp;
 ---
 
+## Installation
+1. Clone or download and unzip repository. 
+2. From within the repo root folder, `realmofreckoning`, install venv `pip install virtualenv` and create a virtual environment `virtualenv [name]`.
+3. Enter the virtual environment `source [name]/bin/activate`
+4. Install requrements `pip install -r requirements.txt`
+
 ## To Run:
-From project root (realofreckoning folder) type `source venv/bin/activate` to enter the virtual environment, and `python3 main.py` to start the game.
+From project root (realofreckoning folder) type `source venv/bin/activate` to enter the virtual environment, and `python3 main.py` to start the game. At any time, press 'q' to quit. Then type `deactivate` to exit the game's virtual environment.
 
 
 ## Known Bugs:
