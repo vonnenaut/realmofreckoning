@@ -1,6 +1,6 @@
 {
   "-1,0,body": {
-    "y": ["\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades quickly.", "self.die"],
+    "y": ["\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades quickly.", "die"],
     "n": ["\nWell, daylight's a-wasting.  Where to now?"]
   }, 
   

@@ -124,8 +124,6 @@ class Realm(object):
 	def narrative(self, area):
 		""" Handles delivery of narrative text based on location as well as any choices available in any given location """
 		key = "{},{}".format(area[0],area[1])
-		print("\nkey: {}".format(key))
-		# print("type(key): {}".format(type(key)))
 
 		if self.player.newplayer == True:
 			prBlue("\nWelcome to Realm of Reckoning!")
@@ -135,42 +133,20 @@ class Realm(object):
 		elif key in self.narratives_data:
 			text = self.narratives_data[key]['text']
 			actions = self.narratives_data[key]['actions']
-			print("actions: {}\n".format(actions))
-   
 			print(text)		
    
 			if actions != None:  # if there are actions associated with this area, execute them
 				for action in actions:
-					# TODO: rework below using json data for encounters
-					# create a key for command associated with narrative (3 digits: first two are the location, i.e., area, last is an index of the encounter itself appended to the area.  This indexing number may not be needed if there will never be more than one encounter per Realm Location.)
 					temp_list = area[:]
-     
-					# print("action: {}").format(action)
 					temp_list.append(action)
-     
-					# print("\ntemp_list: {}").format(temp_list)
-     
 					choice_key = "{},{},{}".format(temp_list[0], temp_list[1], temp_list[2])
      
-					print("choice_key: {}".format(choice_key))
-					print("actions[0]: {}".format(actions[0]))
-     
-     
 					self.encounter(choice_key)
-					# TODO: how to retrieve name of method to call and then call it?
-					# method = getattr(self, actions[0])
-					# print("\n\nmethod: {}".format(method))
-					# print(method)
-     
-					# if method != None:
-					# 	method(choice_key)()
 		else: # if we have gone off the map of existing narratives, return to the location from which player attempted to move
 			prRed("This location is under construction. Try a different direction.")
-			# TODO: move back method
 			self.move_back(self.player)
 			self.narrative(self.player.get_coords())
 	
-		# TODO: should we get user input from narrative method or return to some more central location to perpetuate the loop?
 		# get user input
 		user_input = input(self.PROMPT)
 		# get rid of any capitalized typing by the user
@@ -180,48 +156,28 @@ class Realm(object):
 		self.keydown(user_input)
 
 
-	# TODO: modify to work with json file data
 	def next_choice(self, choice_key):
 		""" increments choice_key's 3rd number to proceed a deeper level in the branching choices for any location """
 		# cast choice_key back as a list so that it can be modified.  I'm pretty sure others would frown on this approach but it works and I have no idea of how else to create this functionality
 		choice_key = list(choice_key)
-		print("(next_choice) choice_key: {}" ).format(choice_key)
-		# choice_key[2] += 1
 		self.encounter(choice_key)
 
 	def encounter(self, choice_key):
 		""" handles interactions for encounters on specific Realm Locations """
-
-		# a third number has been added to the tuple key to represent level of depth (decision/choice 1: outcome, decision/choice 2/outcome, etc.)  The Value of each of these keys goes in the form:  ['user-input choice', print narrative, command(s) to execute]
+		# a third element, a descriptive word or phrase, has been added to the narratives key to make choice_key, and it represents a sort of level of depth (decision/choice 1: outcome, decision/choice 2/outcome, etc.)  The format of each of these choice_keys goes in the string form "x-coordinate,y-coordinate,description", to be used to look up narrative and possible further choices in the file encounters.json, which is imported as the variable encounters_data.
 		
 		# prompt user for input in respose to encounter
 		user_input = input(self.PROMPT).lower()
- 
-		# TODO: implement below w/replacement self.encounters_data, from encounters.json
-		# outcomes = { (-1,0,1): 
-		# 						{'y': ["\nAs you approach one of the bodies closely, you realize\n that he is feigning death when he rolls quickly and \nsinks a blade into your neck.  Your life fades quickly.", self.die],
-		# 						 'n': ["\nWell, daylight's a-wasting.  Where to now?"]}, 
-		# 			 (0,1,1):
-		# 			 			{'y': ["\nYou steal yourself and proceed down the cracked and \ndisintegrating steps only to find a locked wooden door.  \n\nDo you attempt to force the lock? (y/n)", self.next_choice],
-		# 			 			 'n': ["\nWhere to now?"]},
-		# 			 (0,1,2): 
-		# 			 			{'y': ["\nYou put all your force into it as you drive your shoulder \ninto the door.  The door gives way in a sudden explosion \nof dust and splinters.  \n\nIt's too dark to proceed safely without a lantern and so \nyou return through the broken doorway and back up the stairs \nto the crumbling remains of the fortress above."], 
-		# 			             'n': ["\nWhere to now?"]},
-		# 	   (999,999,999):   {"Command not recognized.  Please type 'h' for help."}
-		# 	   		}
-
   
-		# TODO: fix, entry of 'y' --> "Command not recognized ..."
 		if choice_key in self.encounters_data and user_input in self.encounters_data[choice_key]:
 			print(self.encounters_data[choice_key][user_input][0])
+   
 			if len(self.encounters_data[choice_key][user_input]) > 1:
-				for index in range(1,len(self.encounters_data[choice_key][user_input])):
-					if self.encounters_data[choice_key][user_input][index] == self.next_choice:
-						self.next_choice(choice_key)
-					else:
-         				# TODO: fix
-						self.encounters_data[choice_key][user_input][index]()
-						# self.encounter() ?
+				if self.encounters_data[choice_key][user_input][1] == "die":
+					self.die()
+				else:
+					choice_key = "{},{},{}".format(self.player.get_coord(0), self.player.get_coord(1),  self.encounters_data[choice_key][user_input][1])
+					self.encounter(choice_key)
 		else:
 			prRed("Command not recognized.  Please type 'h' for help.")
 
